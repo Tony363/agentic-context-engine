@@ -762,10 +762,13 @@ def main():
         playbook = Playbook()
 
     # Create ACE components with OnlineAdapter (using LiteLLM for ACE roles)
-    llm = LiteLLMClient(model="claude-haiku-4-5-20251001", temperature=0.2)
+    # All roles need higher max_tokens to handle large browser-use logs and analyses
+    generator_llm = LiteLLMClient(
+        model="claude-haiku-4-5-20251001",
+        temperature=0.2,
+        max_tokens=8192,  # Increased from default 512 for complex shopping strategies
+    )
 
-    # Create separate LLM clients for Reflector and Curator with higher max_tokens
-    # to handle large raw browser-use logs
     reflector_llm = LiteLLMClient(
         model="claude-haiku-4-5-20251001",
         temperature=0.2,
@@ -783,7 +786,9 @@ def main():
 
     adapter = OnlineAdapter(
         playbook=playbook,  # Use loaded playbook instead of empty one
-        generator=Generator(llm, prompt_template=manager.get_generator_prompt()),
+        generator=Generator(
+            generator_llm, prompt_template=manager.get_generator_prompt()
+        ),
         reflector=Reflector(
             reflector_llm, prompt_template=manager.get_reflector_prompt()
         ),
