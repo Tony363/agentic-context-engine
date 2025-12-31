@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import json
-import os
-from typing import Any, Dict, List, Optional, Union
-from dataclasses import dataclass
-import asyncio
 import logging
+import os
+from dataclasses import dataclass
+from typing import Any
 
 from ..llm import LLMClient, LLMResponse
 
@@ -15,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import litellm
-    from litellm import completion, acompletion, Router
+    from litellm import Router, acompletion, completion
 
     LITELLM_AVAILABLE = True
 except ImportError:
@@ -37,25 +35,25 @@ class LiteLLMConfig:
     """Configuration for LiteLLM client."""
 
     model: str
-    api_key: Optional[str] = None
-    api_base: Optional[str] = None
-    api_version: Optional[str] = None
+    api_key: str | None = None
+    api_base: str | None = None
+    api_version: str | None = None
     temperature: float = 0.0
     max_tokens: int = 2048
-    top_p: Optional[float] = None
+    top_p: float | None = None
     timeout: int = 60
     max_retries: int = 3
-    fallbacks: Optional[List[str]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    fallbacks: list[str] | None = None
+    metadata: dict[str, Any] | None = None
 
     # Provider-specific settings
-    azure_deployment: Optional[str] = None
-    azure_api_key: Optional[str] = None
-    azure_api_base: Optional[str] = None
+    azure_deployment: str | None = None
+    azure_api_key: str | None = None
+    azure_api_base: str | None = None
 
     # Cost tracking
     track_cost: bool = True
-    max_budget: Optional[float] = None
+    max_budget: float | None = None
 
     # Debugging
     verbose: bool = False
@@ -65,11 +63,11 @@ class LiteLLMConfig:
     sampling_priority: str = "temperature"  # "temperature" | "top_p" | "top_k"
 
     # HTTP/SSL settings
-    extra_headers: Optional[Dict[str, str]] = None  # Custom HTTP headers
-    ssl_verify: Optional[Union[bool, str]] = None  # True/False or path to CA bundle
+    extra_headers: dict[str, str] | None = None  # Custom HTTP headers
+    ssl_verify: bool | str | None = None  # True/False or path to CA bundle
 
     # Model-specific parameters (reasoning_effort, budget_tokens, etc.)
-    extra_params: Optional[Dict[str, Any]] = None
+    extra_params: dict[str, Any] | None = None
 
 
 class LiteLLMClient(LLMClient):
@@ -115,14 +113,14 @@ class LiteLLMClient(LLMClient):
 
     def __init__(
         self,
-        model: Optional[str] = None,
-        api_key: Optional[str] = None,
-        api_base: Optional[str] = None,
+        model: str | None = None,
+        api_key: str | None = None,
+        api_base: str | None = None,
         temperature: float = 0.0,
         max_tokens: int = 2048,
-        fallbacks: Optional[List[str]] = None,
+        fallbacks: list[str] | None = None,
         sampling_priority: str = "temperature",
-        config: Optional[LiteLLMConfig] = None,
+        config: LiteLLMConfig | None = None,
         **kwargs: Any,
     ) -> None:
         """
@@ -196,7 +194,7 @@ class LiteLLMClient(LLMClient):
             litellm.set_verbose = True
 
         # Set up router if fallbacks are configured
-        self.router: Optional[Any] = None  # Router type from litellm
+        self.router: Any | None = None  # Router type from litellm
         if self.config.fallbacks:
             self._setup_router()
 
@@ -310,8 +308,8 @@ class LiteLLMClient(LLMClient):
 
     @staticmethod
     def _resolve_sampling_params(
-        params: Dict[str, Any], model: str, sampling_priority: str = "temperature"
-    ) -> Dict[str, Any]:
+        params: dict[str, Any], model: str, sampling_priority: str = "temperature"
+    ) -> dict[str, Any]:
         """
         Single source of truth for parameter conflict resolution.
 
@@ -412,7 +410,7 @@ class LiteLLMClient(LLMClient):
         return resolved
 
     def complete(
-        self, prompt: str, system: Optional[str] = None, **kwargs: Any
+        self, prompt: str, system: str | None = None, **kwargs: Any
     ) -> LLMResponse:
         """
         Generate completion for the given prompt.
@@ -479,9 +477,9 @@ class LiteLLMClient(LLMClient):
                         call_params["metadata"] = {}
                     if "opik" not in call_params["metadata"]:
                         call_params["metadata"]["opik"] = {}
-                    call_params["metadata"]["opik"][
-                        "current_span_data"
-                    ] = current_span_data
+                    call_params["metadata"]["opik"]["current_span_data"] = (
+                        current_span_data
+                    )
                     logger.debug(
                         f"Associated LLM call with Opik span: {current_span_data.get('name', 'unknown')}"
                     )
@@ -546,7 +544,7 @@ class LiteLLMClient(LLMClient):
             raise
 
     async def acomplete(
-        self, prompt: str, system: Optional[str] = None, **kwargs: Any
+        self, prompt: str, system: str | None = None, **kwargs: Any
     ) -> LLMResponse:
         """
         Async version of complete.
@@ -613,9 +611,9 @@ class LiteLLMClient(LLMClient):
                         call_params["metadata"] = {}
                     if "opik" not in call_params["metadata"]:
                         call_params["metadata"]["opik"] = {}
-                    call_params["metadata"]["opik"][
-                        "current_span_data"
-                    ] = current_span_data
+                    call_params["metadata"]["opik"]["current_span_data"] = (
+                        current_span_data
+                    )
                     logger.debug(
                         f"Associated LLM call with Opik span: {current_span_data.get('name', 'unknown')}"
                     )
@@ -732,7 +730,7 @@ class LiteLLMClient(LLMClient):
             return "unknown"
 
     @classmethod
-    def list_models(cls) -> List[str]:
+    def list_models(cls) -> list[str]:
         """List all supported models."""
         if not LITELLM_AVAILABLE:
             return []

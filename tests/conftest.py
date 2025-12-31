@@ -5,12 +5,12 @@ across test files and ensure consistent test data.
 """
 
 import json
-from typing import Any, Dict, Type, TypeVar
-import pytest
-from pydantic import BaseModel
+from typing import Any, TypeVar
 
-from ace import Skillbook, Sample, LLMClient
+import pytest
+from ace import LLMClient, Sample, Skillbook
 from ace.llm import LLMResponse
+from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -57,7 +57,7 @@ class MockLLMClient(LLMClient):
     def complete_structured(
         self,
         prompt: str,
-        response_model: Type[T],
+        response_model: type[T],
         **kwargs: Any,
     ) -> T:
         """
@@ -82,7 +82,7 @@ class MockLLMClient(LLMClient):
         return response_model.model_validate(data)
 
     @property
-    def call_history(self) -> list[Dict[str, Any]]:
+    def call_history(self) -> list[dict[str, Any]]:
         """Get history of all complete() calls."""
         return self._call_history
 

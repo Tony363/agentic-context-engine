@@ -23,25 +23,22 @@ Output:
 
 import json
 import os
-import sys
 import time
 from pathlib import Path
-from typing import List
-from dotenv import load_dotenv
-
 
 from ace import (
-    ReplayAgent,
-    Reflector,
-    SkillManager,
-    OfflineACE,
-    Sample,
-    TaskEnvironment,
     EnvironmentResult,
-    Skillbook,
     LiteLLMClient,
+    OfflineACE,
+    Reflector,
+    ReplayAgent,
+    Sample,
+    Skillbook,
+    SkillManager,
+    TaskEnvironment,
 )
 from ace.prompts_v2_1 import PromptManager
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv(override=True)
@@ -94,7 +91,7 @@ class ConvexEnvironment(TaskEnvironment):
         )
 
 
-def load_convex_samples(jsonl_path: str, max_lines: int = 20) -> List[Sample]:
+def load_convex_samples(jsonl_path: str, max_lines: int = 20) -> list[Sample]:
     """
     Load Convex training samples from JSONL file.
 
@@ -110,7 +107,7 @@ def load_convex_samples(jsonl_path: str, max_lines: int = 20) -> List[Sample]:
     print(f"📂 Loading samples from: {jsonl_path}")
     print(f"   Reading first {max_lines} lines...\n")
 
-    with open(jsonl_path, "r", encoding="utf-8") as f:
+    with open(jsonl_path, encoding="utf-8") as f:
         for i, line in enumerate(f):
             if i >= max_lines:
                 break
@@ -179,7 +176,7 @@ def main():
 
     if not data_path.exists():
         print(f"❌ Data file not found: {data_path}")
-        print(f"   Run convert_convex_to_ace.py first to generate training data\n")
+        print("   Run convert_convex_to_ace.py first to generate training data\n")
         return
 
     samples = load_convex_samples(str(data_path), max_lines=MAX_LINES)
@@ -195,7 +192,7 @@ def main():
 
     # 2. Create ACE components
     print("🧠 Initializing ACE components...")
-    print(f"   Agent: ReplayAgent (sample-based mode - NEW!)")
+    print("   Agent: ReplayAgent (sample-based mode - NEW!)")
     print(f"   Reflector: {MODEL} (with v2 prompts)")
     print(f"   SkillManager: {MODEL} (with v2 prompts)\n")
 
@@ -270,7 +267,7 @@ def main():
 
     # Show learned insights
     if adapter.skillbook.skills():
-        print(f"\n🎯 Top Learned Insights:")
+        print("\n🎯 Top Learned Insights:")
         print("-" * 70)
 
         for i, skill in enumerate(adapter.skillbook.skills()[:10], 1):
@@ -288,7 +285,7 @@ def main():
 
     # Show skillbook stats
     stats = adapter.skillbook.stats()
-    print(f"\n📊 Skillbook Statistics:")
+    print("\n📊 Skillbook Statistics:")
     print(f"   Total skills: {stats['skills']}")
     print(f"   Sections: {stats['sections']}")
     print(f"   Total helpful: {stats['tags']['helpful']}")

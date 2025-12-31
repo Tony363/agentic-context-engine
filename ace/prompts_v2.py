@@ -25,7 +25,6 @@ Based on patterns from GPT-5, Claude 3.5, and 80+ production prompts.
 
 import warnings
 from datetime import datetime
-from typing import Dict, Any, Optional
 
 # Emit deprecation warning when module is imported
 warnings.warn(
@@ -790,10 +789,10 @@ class PromptManager:
             default_version: Default version to use if not specified
         """
         self.default_version = default_version
-        self.usage_stats: Dict[str, int] = {}
+        self.usage_stats: dict[str, int] = {}
 
     def get_agent_prompt(
-        self, domain: Optional[str] = None, version: Optional[str] = None
+        self, domain: str | None = None, version: str | None = None
     ) -> str:
         """
         Get agent prompt for specific domain and version.
@@ -841,7 +840,7 @@ class PromptManager:
 
         return prompt
 
-    def get_reflector_prompt(self, version: Optional[str] = None) -> str:
+    def get_reflector_prompt(self, version: str | None = None) -> str:
         """Get reflector prompt for specific version."""
         version = version or self.default_version
         prompt = self.PROMPTS["reflector"].get(version)
@@ -865,7 +864,7 @@ class PromptManager:
 
         return prompt
 
-    def get_skill_manager_prompt(self, version: Optional[str] = None) -> str:
+    def get_skill_manager_prompt(self, version: str | None = None) -> str:
         """Get skill manager prompt for specific version."""
         version = version or self.default_version
         prompt = self.PROMPTS["skill_manager"].get(version)
@@ -893,12 +892,12 @@ class PromptManager:
         """Track prompt usage for analysis."""
         self.usage_stats[prompt_id] = self.usage_stats.get(prompt_id, 0) + 1
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> dict[str, int]:
         """Get prompt usage statistics."""
         return self.usage_stats.copy()
 
     @staticmethod
-    def list_available_versions() -> Dict[str, list]:
+    def list_available_versions() -> dict[str, list]:
         """List all available prompt versions."""
         return {
             role: list(prompts.keys())

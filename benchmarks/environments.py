@@ -9,12 +9,11 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Dict, List, Set, Any
+from typing import Any
 
-from ace import EnvironmentResult
+from ace import EnvironmentResult, Sample
 
-from ace import Sample
-from .base import BenchmarkConfig, BenchmarkEnvironment, BenchmarkSample
+from .base import BenchmarkEnvironment
 
 
 class GenericBenchmarkEnvironment(BenchmarkEnvironment):
@@ -79,7 +78,7 @@ class FiNEREnvironment(BenchmarkEnvironment):
             feedback=feedback, ground_truth=sample.ground_truth, metrics=metrics
         )
 
-    def _extract_entities(self, prediction: str, sample: Sample) -> Set[tuple]:
+    def _extract_entities(self, prediction: str, sample: Sample) -> set[tuple]:
         """Extract entities from model prediction."""
         entities = set()
 
@@ -107,7 +106,7 @@ class FiNEREnvironment(BenchmarkEnvironment):
 
         return entities
 
-    def _extract_entities_from_text(self, text: str) -> Set[tuple]:
+    def _extract_entities_from_text(self, text: str) -> set[tuple]:
         """Extract entities from unstructured text using patterns."""
         entities = set()
 
@@ -128,7 +127,7 @@ class FiNEREnvironment(BenchmarkEnvironment):
 
         return entities
 
-    def _extract_gold_entities(self, sample: Sample) -> Set[tuple]:
+    def _extract_gold_entities(self, sample: Sample) -> set[tuple]:
         """Extract gold entities from sample metadata."""
         entities = set()
 
@@ -150,7 +149,7 @@ class FiNEREnvironment(BenchmarkEnvironment):
                 current_entity = []
                 current_label = None
 
-                for token, label in zip(tokens, bio_labels):
+                for token, label in zip(tokens, bio_labels, strict=False):
                     if label.startswith("B-"):  # Beginning of entity
                         if current_entity:
                             entities.add((" ".join(current_entity), current_label))
@@ -171,8 +170,8 @@ class FiNEREnvironment(BenchmarkEnvironment):
         return entities
 
     def _compute_ner_metrics(
-        self, predicted: Set[tuple], gold: Set[tuple]
-    ) -> Dict[str, float]:
+        self, predicted: set[tuple], gold: set[tuple]
+    ) -> dict[str, float]:
         """Compute NER evaluation metrics."""
         if not gold:
             return {
@@ -201,7 +200,7 @@ class FiNEREnvironment(BenchmarkEnvironment):
         }
 
     def _generate_ner_feedback(
-        self, predicted: Set[tuple], gold: Set[tuple], metrics: Dict[str, float]
+        self, predicted: set[tuple], gold: set[tuple], metrics: dict[str, float]
     ) -> str:
         """Generate detailed feedback for NER evaluation."""
         f1_score = metrics["f1"]
@@ -301,7 +300,7 @@ class XBRLMathEnvironment(BenchmarkEnvironment):
 
     def _compute_numerical_metrics(
         self, predicted: float, ground_truth: float
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Compute numerical accuracy metrics with tolerance."""
         import math
 
@@ -334,7 +333,7 @@ class XBRLMathEnvironment(BenchmarkEnvironment):
         self,
         predicted: float,
         ground_truth: float,
-        metrics: Dict[str, float],
+        metrics: dict[str, float],
         full_prediction: str,
     ) -> str:
         """Generate feedback for numerical reasoning performance."""
@@ -396,7 +395,7 @@ class AppWorldEnvironment(BenchmarkEnvironment):
             feedback=feedback, ground_truth=sample.ground_truth, metrics=metrics
         )
 
-    def _extract_execution_results(self, sample: Sample) -> Dict[str, Any]:
+    def _extract_execution_results(self, sample: Sample) -> dict[str, Any]:
         """Extract execution results from sample metadata."""
         if not sample.metadata:
             return {"success": False, "error": "No execution results available"}
@@ -407,8 +406,8 @@ class AppWorldEnvironment(BenchmarkEnvironment):
         )
 
     def _compute_execution_metrics(
-        self, execution_results: Dict[str, Any], prediction: str
-    ) -> Dict[str, float]:
+        self, execution_results: dict[str, Any], prediction: str
+    ) -> dict[str, float]:
         """Compute execution success metrics."""
         success = execution_results.get("success", False)
 
@@ -431,7 +430,7 @@ class AppWorldEnvironment(BenchmarkEnvironment):
         return metrics
 
     def _generate_execution_feedback(
-        self, execution_results: Dict[str, Any], metrics: Dict[str, float]
+        self, execution_results: dict[str, Any], metrics: dict[str, float]
     ) -> str:
         """Generate feedback for agent execution performance."""
         if metrics["task_success"]:

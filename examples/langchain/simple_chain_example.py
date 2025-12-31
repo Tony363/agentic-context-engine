@@ -15,6 +15,7 @@ Environment:
 """
 
 import os
+
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -22,7 +23,7 @@ load_dotenv()
 
 # Check availability
 try:
-    from ace.integrations import ACELangChain, LANGCHAIN_AVAILABLE
+    from ace.integrations import LANGCHAIN_AVAILABLE, ACELangChain
 
     if not LANGCHAIN_AVAILABLE:
         print("LangChain is not installed.")
@@ -34,8 +35,8 @@ except ImportError:
     print("Install with: pip install ace-framework")
     exit(1)
 
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_anthropic import ChatAnthropic
+from langchain_core.prompts import ChatPromptTemplate
 
 
 def example_basic_chain():
@@ -74,7 +75,9 @@ def example_basic_chain():
     print(f"\nLearned {len(ace_chain.skillbook.skills())} strategies")
 
     # Save skillbook in the same directory as this script
-    skillbook_path = os.path.join(os.path.dirname(__file__), "simple_chain_learned.json")
+    skillbook_path = os.path.join(
+        os.path.dirname(__file__), "simple_chain_learned.json"
+    )
     ace_chain.save_skillbook(skillbook_path)
     print(f"\nSkillbook saved to: {skillbook_path}")
 
@@ -90,7 +93,9 @@ def example_reuse_skillbook():
         return
 
     # Check if skillbook exists
-    skillbook_path = os.path.join(os.path.dirname(__file__), "simple_chain_learned.json")
+    skillbook_path = os.path.join(
+        os.path.dirname(__file__), "simple_chain_learned.json"
+    )
     if not os.path.exists(skillbook_path):
         print("No skillbook found. Run Example 1 first!")
         return

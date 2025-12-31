@@ -6,9 +6,10 @@ LM Studio runs an OpenAI-compatible API server, so we use the
 openai/ prefix with a custom base_url instead of ollama/.
 """
 
-from ace.integrations import ACELiteLLM
-from ace import Sample, SimpleEnvironment
 from pathlib import Path
+
+from ace import Sample, SimpleEnvironment
+from ace.integrations import ACELiteLLM
 
 
 def main():

@@ -7,10 +7,9 @@ Compare this with ace_form_filler.py to see ACE's value.
 """
 
 import asyncio
-from typing import Dict
-from dotenv import load_dotenv
 
 from browser_use import Agent, Browser, ChatOpenAI
+from dotenv import load_dotenv
 
 # Import form-specific utilities
 from form_utils import get_test_forms
@@ -18,7 +17,7 @@ from form_utils import get_test_forms
 load_dotenv()
 
 
-async def fill_form(form_data: Dict, model: str = "gpt-4o-mini", headless: bool = True):
+async def fill_form(form_data: dict, model: str = "gpt-4o-mini", headless: bool = True):
     """Fill form without any learning."""
     browser = None
     try:
@@ -75,7 +74,7 @@ ERROR: <reason>"""
             "success": status == "SUCCESS",
         }
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         # Get actual steps even on timeout - history should exist
         try:
             steps = (
@@ -142,7 +141,7 @@ def main():
     print("=" * 40)
     print("📊 Results:")
 
-    for i, (form, result) in enumerate(zip(forms, results), 1):
+    for i, (form, result) in enumerate(zip(forms, results, strict=False), 1):
         status = result["status"]
         steps = result["steps"]
         success = result["success"]
@@ -156,13 +155,13 @@ def main():
     avg_steps = total_steps / len(results) if results else 0
 
     print(
-        f"\n✅ Success rate: {successful}/{len(results)} ({100*successful/len(results):.1f}%)"
+        f"\n✅ Success rate: {successful}/{len(results)} ({100 * successful / len(results):.1f}%)"
     )
     print(f"⚡ Average steps: {avg_steps:.1f}")
-    print(f"🚫 No learning - same performance every time")
+    print("🚫 No learning - same performance every time")
 
-    print(f"\n💡 Compare with: python examples/browser-use/ace_form_filler.py")
-    print(f"   ACE learns and improves after each form!")
+    print("\n💡 Compare with: python examples/browser-use/ace_form_filler.py")
+    print("   ACE learns and improves after each form!")
 
 
 if __name__ == "__main__":

@@ -6,21 +6,18 @@ Tests for ThreadSafeSkillbook, AsyncLearningPipeline, and adapter async mode.
 
 import json
 import threading
-import time
 import unittest
-from typing import List
 
 import pytest
-
 from ace import (
-    SkillManager,
-    EnvironmentResult,
     Agent,
+    EnvironmentResult,
     OfflineACE,
     OnlineACE,
-    Skillbook,
     Reflector,
     Sample,
+    Skillbook,
+    SkillManager,
     TaskEnvironment,
 )
 from ace.async_learning import (
@@ -29,12 +26,10 @@ from ace.async_learning import (
     ReflectionResult,
     ThreadSafeSkillbook,
 )
-from ace.updates import UpdateBatch
-from ace.roles import SkillTag, AgentOutput, ReflectorOutput, SkillManagerOutput
+from ace.roles import AgentOutput, ReflectorOutput
 
 # Import MockLLMClient from conftest
 from tests.conftest import MockLLMClient
-
 
 # ---------------------------------------------------------------------------
 # Test Response Helpers
@@ -142,7 +137,7 @@ class TestThreadSafeSkillbook(unittest.TestCase):
 
         num_threads = 10
         increments_per_thread = 100
-        errors: List[Exception] = []
+        errors: list[Exception] = []
 
         def increment_tags():
             try:
@@ -179,7 +174,7 @@ class TestAsyncLearningPipeline(unittest.TestCase):
         """Set up test fixtures."""
         self.skillbook = Skillbook()
 
-    def _create_mock_llm(self, responses: List[str]) -> MockLLMClient:
+    def _create_mock_llm(self, responses: list[str]) -> MockLLMClient:
         """Create MockLLMClient with queued responses."""
         llm = MockLLMClient()
         llm.set_responses(responses)
@@ -297,7 +292,7 @@ class TestAsyncLearningPipeline(unittest.TestCase):
 
     def test_completion_callback(self):
         """Test completion callback invocation."""
-        completions: List[tuple] = []
+        completions: list[tuple] = []
 
         def on_complete(task, skill_manager_output):
             completions.append((task, skill_manager_output))
@@ -367,7 +362,7 @@ class TestOfflineACEAsyncMode(unittest.TestCase):
         self.skillbook = Skillbook()
         self.environment = SimpleTestEnvironment()
 
-    def _create_mock_llm(self, responses: List[str]) -> MockLLMClient:
+    def _create_mock_llm(self, responses: list[str]) -> MockLLMClient:
         """Create MockLLMClient with queued responses."""
         llm = MockLLMClient()
         llm.set_responses(responses)
@@ -543,7 +538,7 @@ class TestOnlineACEAsyncMode(unittest.TestCase):
         self.skillbook = Skillbook()
         self.environment = SimpleTestEnvironment()
 
-    def _create_mock_llm(self, responses: List[str]) -> MockLLMClient:
+    def _create_mock_llm(self, responses: list[str]) -> MockLLMClient:
         """Create MockLLMClient with queued responses."""
         llm = MockLLMClient()
         llm.set_responses(responses)

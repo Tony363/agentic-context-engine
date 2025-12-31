@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
@@ -77,8 +77,8 @@ class InstructorClient:
     def complete(
         self,
         prompt: str,
-        response_model: Optional[Type[T]] = None,
-        system: Optional[str] = None,
+        response_model: type[T] | None = None,
+        system: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """
@@ -110,8 +110,8 @@ class InstructorClient:
     def complete_structured(
         self,
         prompt: str,
-        response_model: Type[T],
-        system: Optional[str] = None,
+        response_model: type[T],
+        system: str | None = None,
         **kwargs: Any,
     ) -> T:
         """

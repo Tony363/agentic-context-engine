@@ -3,8 +3,7 @@
 import unittest
 
 import pytest
-
-from ace.updates import UpdateOperation, UpdateBatch
+from ace.updates import UpdateBatch, UpdateOperation
 
 
 @pytest.mark.unit
@@ -252,7 +251,7 @@ class TestUpdateBatch(unittest.TestCase):
 
         self.assertEqual(original.reasoning, restored.reasoning)
         self.assertEqual(len(original.operations), len(restored.operations))
-        for orig_op, rest_op in zip(original.operations, restored.operations):
+        for orig_op, rest_op in zip(original.operations, restored.operations, strict=False):
             self.assertEqual(orig_op.type, rest_op.type)
             self.assertEqual(orig_op.section, rest_op.section)
             self.assertEqual(orig_op.content, rest_op.content)

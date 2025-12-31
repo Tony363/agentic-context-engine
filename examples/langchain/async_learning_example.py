@@ -13,6 +13,7 @@ Requires: pip install langchain-anthropic
 import asyncio
 import os
 import time
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,8 +21,8 @@ load_dotenv()
 # Check for LangChain
 try:
     from langchain_anthropic import ChatAnthropic
-    from langchain_core.prompts import ChatPromptTemplate
     from langchain_core.output_parsers import StrOutputParser
+    from langchain_core.prompts import ChatPromptTemplate
 
     LANGCHAIN_AVAILABLE = True
 except ImportError:
@@ -83,7 +84,7 @@ async def run_async_langchain():
 
     # Check learning stats
     stats = ace_chain.learning_stats
-    print(f"\nLearning stats (before wait):")
+    print("\nLearning stats (before wait):")
     print(f"  - Tasks submitted: {stats['tasks_submitted']}")
     print(f"  - Pending: {stats['pending']}")
     print(f"  - Completed: {stats['completed']}")
@@ -98,11 +99,11 @@ async def run_async_langchain():
 
     # Final stats
     final_stats = ace_chain.learning_stats
-    print(f"\nFinal learning stats:")
+    print("\nFinal learning stats:")
     print(f"  - Completed: {final_stats['completed']}")
     print(f"  - Strategies learned: {len(ace_chain.skillbook.skills())}")
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  - Samples processed: {len(questions)}")
     print(f"  - Results returned in: {results_time:.2f}s")
     print(f"  - Learning wait time: {wait_time:.2f}s")
@@ -110,7 +111,7 @@ async def run_async_langchain():
     print(f"  - Strategies learned: {len(ace_chain.skillbook.skills())}")
 
     # Show complete skillbook
-    print(f"\n📚 COMPLETE SKILLBOOK:")
+    print("\n📚 COMPLETE SKILLBOOK:")
     if ace_chain.skillbook.skills():
         print(str(ace_chain.skillbook))
     else:
@@ -162,7 +163,7 @@ async def run_sync_langchain():
         print(f"  ⏱️  {q_time:.2f}s (includes learning)")
 
     total_time = time.time() - start
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  - Samples processed: {len(questions)}")
     print(f"  - Total time: {total_time:.2f}s")
     print(f"  - Strategies learned: {len(ace_chain.skillbook.skills())}")

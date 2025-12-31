@@ -13,10 +13,10 @@ def analyze_ace_run(detailed_results_file):
     print("🔍 ACE RESULTS ANALYSIS")
     print("=" * 50)
 
-    with open(detailed_results_file, "r") as f:
+    with open(detailed_results_file) as f:
         data = json.load(f)
 
-    print(f"📊 SUMMARY:")
+    print("📊 SUMMARY:")
     print(f"  Benchmark: {data['benchmark']}")
     print(f"  Model: {data['model']}")
     print(f"  Total samples reported: {data['samples_evaluated']}")
@@ -33,7 +33,7 @@ def analyze_ace_run(detailed_results_file):
     unique_samples = len(sample_occurrences)
     max_epochs = max(sample_occurrences.values())
 
-    print(f"\n📈 EPOCH ANALYSIS:")
+    print("\n📈 EPOCH ANALYSIS:")
     print(f"  Unique samples: {unique_samples}")
     print(f"  Max epochs per sample: {max_epochs}")
     print(f"  Total evaluations: {sum(sample_occurrences.values())}")
@@ -42,7 +42,7 @@ def analyze_ace_run(detailed_results_file):
     )
 
     # Show ACE learning components
-    print(f"\n🧠 ACE LEARNING VERIFICATION:")
+    print("\n🧠 ACE LEARNING VERIFICATION:")
     first_result = data["results"][0]
 
     has_reflection = "reflection" in first_result
@@ -66,7 +66,7 @@ def analyze_ace_run(detailed_results_file):
             print(f"      Operation types: {set(op_types)}")
 
     # Show learning progression
-    print(f"\n📚 LEARNING PROGRESSION:")
+    print("\n📚 LEARNING PROGRESSION:")
 
     # Group by sample ID to show epochs
     epochs_by_sample = {}
@@ -85,7 +85,7 @@ def analyze_ace_run(detailed_results_file):
 
     for i, epoch_result in enumerate(first_sample_epochs):
         f1 = epoch_result["metrics"]["f1"]
-        print(f"    Epoch {i+1}: F1={f1:.3f}")
+        print(f"    Epoch {i + 1}: F1={f1:.3f}")
 
         # Show if any learning artifacts exist
         if "used_skills" in epoch_result:
@@ -93,7 +93,7 @@ def analyze_ace_run(detailed_results_file):
             print(f"              Used {len(skills)} learned strategies")
 
     # Performance comparison across epochs
-    print(f"\n📈 PERFORMANCE ACROSS EPOCHS:")
+    print("\n📈 PERFORMANCE ACROSS EPOCHS:")
 
     epoch_1_f1s = []
     epoch_2_f1s = []

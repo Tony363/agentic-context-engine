@@ -5,11 +5,11 @@ Evaluates the quality of tool selection decisions made by an AI assistant
 based on conversation traces from Helicone logs.
 """
 
-from typing import Dict, Any, Optional
 from dataclasses import dataclass
+from typing import Any
 
-from ace import TaskEnvironment, EnvironmentResult
-from helicone_loader import HeliconeTrace, ConversationTurn, ToolCall
+from ace import EnvironmentResult, TaskEnvironment
+from helicone_loader import ConversationTurn, HeliconeTrace
 
 
 @dataclass
@@ -21,9 +21,9 @@ class ToolSelectionSample:
     conversation_history: list[ConversationTurn]
     user_request: str
     selected_tool: str
-    tool_input: Dict[str, Any]
-    tool_result: Optional[Dict[str, Any]]
-    next_user_feedback: Optional[str]  # What the user said after this action
+    tool_input: dict[str, Any]
+    tool_result: dict[str, Any] | None
+    next_user_feedback: str | None  # What the user said after this action
 
 
 class ToolSelectionEnvironment(TaskEnvironment):
@@ -159,13 +159,13 @@ class ToolSelectionEnvironment(TaskEnvironment):
             feedback = f"✗ INCORRECT: Selected '{predicted_tool}' but actual trace used '{sample.selected_tool}'.\n"
 
         # Add context
-        feedback += f"\nContext:\n"
+        feedback += "\nContext:\n"
         feedback += f"  - Turn: {sample.turn_index}\n"
         feedback += f"  - User request: {sample.user_request[:100]}...\n"
         feedback += f"  - Previous tools: {self._get_previous_tools(sample)}\n"
 
         # Add reasoning about why this tool made sense
-        feedback += f"\nAnalysis:\n"
+        feedback += "\nAnalysis:\n"
         feedback += self._analyze_tool_choice(sample)
 
         # Add user feedback if available
@@ -292,7 +292,7 @@ class ToolSelectionEnvironment(TaskEnvironment):
 
         prev_tools = self._get_previous_tools(sample)
         if prev_tools:
-            question += f"**Previous Tools Used:**\n"
+            question += "**Previous Tools Used:**\n"
             question += ", ".join(prev_tools) + "\n\n"
 
         question += "**Available Tools:**\n"
@@ -313,6 +313,7 @@ class ToolSelectionEnvironment(TaskEnvironment):
 def main():
     """Demo: Create environment and show samples"""
     import os
+
     from helicone_loader import HeliconeLoader
 
     # Data files are stored in .private/helicone/ to keep them out of the repo
@@ -342,7 +343,7 @@ def main():
         print(question)
 
         sample = env.samples[i]
-        print(f"\n**Ground Truth:**")
+        print("\n**Ground Truth:**")
         print(f"  Actual tool used: {sample.selected_tool}")
         print(f"  Tool input: {sample.tool_input}")
 
@@ -350,9 +351,9 @@ def main():
         simulated_answer = f"I would use {sample.selected_tool} because it's appropriate for this context."
         result = env.evaluate(simulated_answer)
 
-        print(f"\n**Evaluation Result:**")
+        print("\n**Evaluation Result:**")
         print(f"  Correct: {result.correct}")
-        print(f"\n**Feedback:**")
+        print("\n**Feedback:**")
         print(result.feedback)
 
 

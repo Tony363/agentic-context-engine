@@ -6,11 +6,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from difflib import SequenceMatcher
 from pathlib import Path
 from statistics import mean
-from typing import List
 
 from transformers import AutoTokenizer, pipeline  # type: ignore[import-untyped]
 
@@ -46,7 +45,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_questions(path: Path) -> List[dict]:
+def load_questions(path: Path) -> list[dict]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -126,7 +125,7 @@ def main() -> None:
     min_score = min(scores) if scores else 0.0
     max_score = max(scores) if scores else 0.0
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%SZ")
     lines = []
     lines.append("# Questions Test Report (Direct Mode)")
     lines.append("")

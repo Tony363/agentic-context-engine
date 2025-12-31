@@ -18,10 +18,10 @@ Features demonstrated:
 """
 
 import subprocess
-from ace.integrations import ACELiteLLM
-from ace import Sample, SimpleEnvironment
-import os
 from pathlib import Path
+
+from ace import Sample, SimpleEnvironment
+from ace.integrations import ACELiteLLM
 
 
 def check_ollama_running():

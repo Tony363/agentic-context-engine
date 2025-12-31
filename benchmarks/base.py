@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import os
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any
 
-from ace import Sample, TaskEnvironment, EnvironmentResult
+from ace import EnvironmentResult, Sample, TaskEnvironment
 
 
 @dataclass
@@ -22,13 +23,13 @@ class BenchmarkConfig:
 
     task: str
     version: str
-    data: Dict[str, Any]
-    preprocessing: Dict[str, str]
-    metrics: List[Dict[str, Any]]
-    metadata: Optional[Dict[str, Any]] = None
+    data: dict[str, Any]
+    preprocessing: dict[str, str]
+    metrics: list[dict[str, Any]]
+    metadata: dict[str, Any] | None = None
 
     @classmethod
-    def from_dict(cls, config_dict: Dict[str, Any]) -> "BenchmarkConfig":
+    def from_dict(cls, config_dict: dict[str, Any]) -> BenchmarkConfig:
         """Create BenchmarkConfig from loaded YAML dictionary."""
         return cls(
             task=config_dict["task"],
@@ -49,7 +50,7 @@ class DataLoader(ABC):
     """Abstract base class for loading benchmark data from different sources."""
 
     @abstractmethod
-    def load(self, **kwargs) -> Iterator[Dict[str, Any]]:
+    def load(self, **kwargs) -> Iterator[dict[str, Any]]:
         """Load benchmark data and yield individual samples."""
         pass
 
@@ -71,7 +72,7 @@ class BenchmarkEnvironment(TaskEnvironment):
         """Evaluate agent output against benchmark criteria."""
         pass
 
-    def _compute_metrics(self, prediction: str, ground_truth: str) -> Dict[str, float]:
+    def _compute_metrics(self, prediction: str, ground_truth: str) -> dict[str, float]:
         """Compute configured metrics for the benchmark."""
         metrics = {}
 

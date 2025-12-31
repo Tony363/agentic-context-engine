@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, Iterable, List, Literal, Optional, Union, cast
+from typing import Any, Literal, cast
 
 from .updates import UpdateBatch, UpdateOperation
 
@@ -32,16 +33,16 @@ class Skill:
     harmful: int = 0
     neutral: int = 0
     created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     updated_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     # Deduplication fields
-    embedding: Optional[List[float]] = None
+    embedding: list[float] | None = None
     status: Literal["active", "invalid"] = "active"
 
-    def apply_metadata(self, metadata: Dict[str, int]) -> None:
+    def apply_metadata(self, metadata: dict[str, int]) -> None:
         for key, value in metadata.items():
             if hasattr(self, key):
                 setattr(self, key, int(value))
@@ -51,9 +52,9 @@ class Skill:
             raise ValueError(f"Unsupported tag: {tag}")
         current = getattr(self, tag)
         setattr(self, tag, current + increment)
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
 
-    def to_llm_dict(self) -> Dict[str, Any]:
+    def to_llm_dict(self) -> dict[str, Any]:
         """
         Return dictionary with only LLM-relevant fields.
 
@@ -77,11 +78,11 @@ class Skillbook:
     """Structured context store as defined by ACE."""
 
     def __init__(self) -> None:
-        self._skills: Dict[str, Skill] = {}
-        self._sections: Dict[str, List[str]] = {}
+        self._skills: dict[str, Skill] = {}
+        self._sections: dict[str, list[str]] = {}
         self._next_id = 0
         # Store KEEP decisions so we don't re-ask about the same pairs
-        self._similarity_decisions: Dict[FrozenSet[str], SimilarityDecision] = {}
+        self._similarity_decisions: dict[frozenset[str], SimilarityDecision] = {}
 
     def __repr__(self) -> str:
         """Concise representation for debugging and object inspection."""
@@ -105,8 +106,8 @@ class Skillbook:
         self,
         section: str,
         content: str,
-        skill_id: Optional[str] = None,
-        metadata: Optional[Dict[str, int]] = None,
+        skill_id: str | None = None,
+        metadata: dict[str, int] | None = None,
     ) -> Skill:
         skill_id = skill_id or self._generate_id(section)
         metadata = metadata or {}
@@ -120,9 +121,9 @@ class Skillbook:
         self,
         skill_id: str,
         *,
-        content: Optional[str] = None,
-        metadata: Optional[Dict[str, int]] = None,
-    ) -> Optional[Skill]:
+        content: str | None = None,
+        metadata: dict[str, int] | None = None,
+    ) -> Skill | None:
         skill = self._skills.get(skill_id)
         if skill is None:
             return None
@@ -130,10 +131,10 @@ class Skillbook:
             skill.content = content
         if metadata:
             skill.apply_metadata(metadata)
-        skill.updated_at = datetime.now(timezone.utc).isoformat()
+        skill.updated_at = datetime.now(UTC).isoformat()
         return skill
 
-    def tag_skill(self, skill_id: str, tag: str, increment: int = 1) -> Optional[Skill]:
+    def tag_skill(self, skill_id: str, tag: str, increment: int = 1) -> Skill | None:
         skill = self._skills.get(skill_id)
         if skill is None:
             return None
@@ -157,7 +158,7 @@ class Skillbook:
         if soft:
             # Soft delete: mark as invalid but keep in storage
             skill.status = "invalid"
-            skill.updated_at = datetime.now(timezone.utc).isoformat()
+            skill.updated_at = datetime.now(UTC).isoformat()
         else:
             # Hard delete: remove entirely
             self._skills.pop(skill_id, None)
@@ -169,10 +170,10 @@ class Skillbook:
                 if not self._sections[skill.section]:
                     del self._sections[skill.section]
 
-    def get_skill(self, skill_id: str) -> Optional[Skill]:
+    def get_skill(self, skill_id: str) -> Skill | None:
         return self._skills.get(skill_id)
 
-    def skills(self, include_invalid: bool = False) -> List[Skill]:
+    def skills(self, include_invalid: bool = False) -> list[Skill]:
         """Get all skills in the skillbook.
 
         Args:
@@ -190,7 +191,7 @@ class Skillbook:
     # ------------------------------------------------------------------ #
     def get_similarity_decision(
         self, skill_id_a: str, skill_id_b: str
-    ) -> Optional[SimilarityDecision]:
+    ) -> SimilarityDecision | None:
         """Get a prior similarity decision for a pair of skills."""
         pair_key = frozenset([skill_id_a, skill_id_b])
         return self._similarity_decisions.get(pair_key)
@@ -213,7 +214,7 @@ class Skillbook:
     # ------------------------------------------------------------------ #
     # Serialization
     # ------------------------------------------------------------------ #
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         # Serialize similarity decisions with string keys (JSON doesn't support frozenset)
         similarity_decisions_serialized = {
             ",".join(sorted(pair_ids)): asdict(decision)
@@ -229,7 +230,7 @@ class Skillbook:
         }
 
     @classmethod
-    def from_dict(cls, payload: Dict[str, object]) -> "Skillbook":
+    def from_dict(cls, payload: dict[str, object]) -> Skillbook:
         instance = cls()
         skills_payload = payload.get("skills", {})
         if isinstance(skills_payload, dict):
@@ -250,7 +251,7 @@ class Skillbook:
             }
         next_id_value = payload.get("next_id", 0)
         instance._next_id = (
-            int(cast(Union[int, str], next_id_value))
+            int(cast(int | str, next_id_value))
             if next_id_value is not None
             else 0
         )
@@ -269,7 +270,7 @@ class Skillbook:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
 
     @classmethod
-    def loads(cls, data: str) -> "Skillbook":
+    def loads(cls, data: str) -> Skillbook:
         payload = json.loads(data)
         if not isinstance(payload, dict):
             raise ValueError("Skillbook serialization must be a JSON object.")
@@ -290,7 +291,7 @@ class Skillbook:
             f.write(self.dumps())
 
     @classmethod
-    def load_from_file(cls, path: str) -> "Skillbook":
+    def load_from_file(cls, path: str) -> Skillbook:
         """Load skillbook from a JSON file.
 
         Args:
@@ -396,7 +397,7 @@ class Skillbook:
         Returns:
             Markdown-formatted skillbook string
         """
-        parts: List[str] = []
+        parts: list[str] = []
         for section, skill_ids in sorted(self._sections.items()):
             parts.append(f"## {section}")
             for skill_id in skill_ids:
@@ -405,7 +406,7 @@ class Skillbook:
                 parts.append(f"- [{skill.id}] {skill.content} {counters}")
         return "\n".join(parts)
 
-    def stats(self) -> Dict[str, object]:
+    def stats(self) -> dict[str, object]:
         return {
             "sections": len(self._sections),
             "skills": len(self._skills),

@@ -10,10 +10,11 @@ Requires:
 - A capable model loaded in LM Studio
 """
 
-import requests
-from ace.integrations import ACELiteLLM
-from ace import Sample, SimpleEnvironment
 from pathlib import Path
+
+import requests
+from ace import Sample, SimpleEnvironment
+from ace.integrations import ACELiteLLM
 
 
 def check_lm_studio_running():

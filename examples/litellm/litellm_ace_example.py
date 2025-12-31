@@ -30,9 +30,10 @@ Environment:
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv
-from ace.integrations import ACELiteLLM
+
 from ace import Sample, SimpleEnvironment
+from ace.integrations import ACELiteLLM
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -101,7 +102,7 @@ def main():
         successful_samples = len([r for r in results if r.success])
         success_rate = successful_samples / len(results) if results else 0
 
-        print(f"Learning completed:")
+        print("Learning completed:")
         print(
             f"  Success rate: {success_rate:.1%} ({successful_samples}/{len(results)})"
         )

@@ -4,10 +4,8 @@ import json
 import os
 import tempfile
 import unittest
-from pathlib import Path
 
 import pytest
-
 from ace import Skillbook, UpdateBatch, UpdateOperation
 
 
@@ -148,7 +146,7 @@ class TestSkillbook(unittest.TestCase):
         # Verify content matches
         self.assertEqual(len(loaded.skills()), len(self.skillbook.skills()))
 
-        for original, loaded_skill in zip(self.skillbook.skills(), loaded.skills()):
+        for original, loaded_skill in zip(self.skillbook.skills(), loaded.skills(), strict=False):
             self.assertEqual(original.id, loaded_skill.id)
             self.assertEqual(original.content, loaded_skill.content)
             self.assertEqual(original.helpful, loaded_skill.helpful)
@@ -166,7 +164,7 @@ class TestSkillbook(unittest.TestCase):
             self.assertTrue(os.path.exists(temp_path))
 
             # Verify content is valid JSON
-            with open(temp_path, "r") as f:
+            with open(temp_path) as f:
                 data = json.load(f)
 
             self.assertIn("skills", data)

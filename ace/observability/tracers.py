@@ -7,7 +7,8 @@ Provides utilities for conditionally applying Opik tracing to ACE framework comp
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Optional, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ except ImportError:
 
 
 def maybe_track(
-    name: Optional[str] = None, tags: Optional[list[str]] = None, **kwargs: Any
+    name: str | None = None, tags: list[str] | None = None, **kwargs: Any
 ) -> Callable[[F], F]:
     """
     Conditionally apply @opik.track decorator if Opik is available and enabled.

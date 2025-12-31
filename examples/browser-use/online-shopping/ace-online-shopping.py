@@ -51,14 +51,14 @@ def get_ace_token_usage(
         client = opik.Opik()
         client.flush()
 
-        print(f"   📋 Querying Opik for ACE token usage...")
+        print("   📋 Querying Opik for ACE token usage...")
 
         # Use run start time if available, otherwise fall back to last 10 minutes
         if run_start_time:
             recent_time = run_start_time.isoformat().replace("+00:00", "Z")
             print(f"   🕐 Searching for traces since run start: {recent_time}")
         else:
-            now = datetime.datetime.now(datetime.timezone.utc)
+            now = datetime.datetime.now(datetime.UTC)
             recent_time = (
                 (now - datetime.timedelta(minutes=10))
                 .isoformat()
@@ -124,18 +124,18 @@ def get_ace_token_usage(
                 # Classify by role
                 if "agent" in trace_name_lower:
                     agent_tokens += total_tokens
-                    print(f"         🎯 Added to Agent")
+                    print("         🎯 Added to Agent")
                 elif "reflector" in trace_name_lower:
                     reflector_tokens += total_tokens
-                    print(f"         🔍 Added to Reflector")
+                    print("         🔍 Added to Reflector")
                 elif "skill_manager" in trace_name_lower:
                     skill_manager_tokens += total_tokens
-                    print(f"         📝 Added to SkillManager")
+                    print("         📝 Added to SkillManager")
 
         # Calculate total ACE tokens
         ace_tokens = agent_tokens + reflector_tokens + skill_manager_tokens
 
-        print(f"   📊 ACE Role breakdown:")
+        print("   📊 ACE Role breakdown:")
         print(f"      🎯 Agent: {agent_tokens} tokens")
         print(f"      🔍 Reflector: {reflector_tokens} tokens")
         print(f"      📝 SkillManager: {skill_manager_tokens} tokens")
@@ -190,7 +190,7 @@ async def main():
     """Run grocery shopping with ACE learning."""
 
     # Capture start time for trace filtering
-    run_start_time = datetime.datetime.now(datetime.timezone.utc)
+    run_start_time = datetime.datetime.now(datetime.UTC)
 
     # Configure observability
     try:
@@ -222,7 +222,7 @@ async def main():
     else:
         print("🆕 Starting with empty skillbook - learning from scratch")
 
-    print(f"\n🎯 Task: Shop for 5 essential items at Migros")
+    print("\n🎯 Task: Shop for 5 essential items at Migros")
     print("💡 ACE will learn from this shopping experience\n")
 
     try:
@@ -271,7 +271,7 @@ async def main():
                 print(f"⚠️ Could not extract browser-use tokens: {e}")
 
         # Query ACE tokens after shopping completed
-        print(f"\n💰 Querying ACE token usage after shopping...")
+        print("\n💰 Querying ACE token usage after shopping...")
         time.sleep(5)  # Wait for Opik to index final traces
         (
             ace_tokens,
@@ -315,7 +315,7 @@ async def main():
 
         accuracy_pct = (correct_items / 5) * 100
 
-        print(f"\n📊 PERFORMANCE METRICS:")
+        print("\n📊 PERFORMANCE METRICS:")
         print("-" * 60)
         print(f"🔄 Steps taken: {steps}")
         print(f"🤖 Browser-use tokens: {browseruse_tokens:,}")

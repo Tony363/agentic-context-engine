@@ -16,15 +16,16 @@ import json
 import logging
 import threading
 import time
+from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
 from queue import Empty, Full, Queue
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .adaptation import EnvironmentResult, Sample
+    from .roles import AgentOutput, Reflector, ReflectorOutput, SkillManager
     from .skillbook import Skillbook
-    from .roles import SkillManager, AgentOutput, Reflector, ReflectorOutput
 
 from .updates import UpdateBatch
 
@@ -43,15 +44,15 @@ class LearningTask:
     Contains all data needed to run reflection on a sample's results.
     """
 
-    sample: "Sample"
-    agent_output: "AgentOutput"
-    environment_result: "EnvironmentResult"
+    sample: Sample
+    agent_output: AgentOutput
+    environment_result: EnvironmentResult
     epoch: int
     step_index: int
     total_epochs: int = 1
     total_steps: int = 1
     timestamp: float = field(default_factory=time.time)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -62,7 +63,7 @@ class ReflectionResult:
     """
 
     task: LearningTask
-    reflection: "ReflectorOutput"
+    reflection: ReflectorOutput
     timestamp: float = field(default_factory=time.time)
 
 
@@ -86,12 +87,12 @@ class ThreadSafeSkillbook:
         >>> ts_skillbook.apply_update(update_batch)
     """
 
-    def __init__(self, skillbook: "Skillbook") -> None:
+    def __init__(self, skillbook: Skillbook) -> None:
         self._skillbook = skillbook
         self._lock = threading.RLock()
 
     @property
-    def skillbook(self) -> "Skillbook":
+    def skillbook(self) -> Skillbook:
         """Direct access to underlying skillbook (for read operations)."""
         return self._skillbook
 
@@ -103,15 +104,15 @@ class ThreadSafeSkillbook:
         """Get TOON-encoded skillbook for LLM prompts (lock-free)."""
         return self._skillbook.as_prompt()
 
-    def skills(self) -> List[Any]:
+    def skills(self) -> list[Any]:
         """Get all skills (lock-free)."""
         return self._skillbook.skills()
 
-    def get_skill(self, skill_id: str) -> Optional[Any]:
+    def get_skill(self, skill_id: str) -> Any | None:
         """Get a skill by ID (lock-free)."""
         return self._skillbook.get_skill(skill_id)
 
-    def stats(self) -> Dict[str, object]:
+    def stats(self) -> dict[str, object]:
         """Get skillbook statistics (lock-free)."""
         return self._skillbook.stats()
 
@@ -124,7 +125,7 @@ class ThreadSafeSkillbook:
         with self._lock:
             self._skillbook.apply_update(update)
 
-    def tag_skill(self, skill_id: str, tag: str, increment: int = 1) -> Optional[Any]:
+    def tag_skill(self, skill_id: str, tag: str, increment: int = 1) -> Any | None:
         """Tag a skill (thread-safe)."""
         with self._lock:
             return self._skillbook.tag_skill(skill_id, tag, increment)
@@ -133,8 +134,8 @@ class ThreadSafeSkillbook:
         self,
         section: str,
         content: str,
-        skill_id: Optional[str] = None,
-        metadata: Optional[Dict[str, int]] = None,
+        skill_id: str | None = None,
+        metadata: dict[str, int] | None = None,
     ) -> Any:
         """Add a skill (thread-safe)."""
         with self._lock:
@@ -144,9 +145,9 @@ class ThreadSafeSkillbook:
         self,
         skill_id: str,
         *,
-        content: Optional[str] = None,
-        metadata: Optional[Dict[str, int]] = None,
-    ) -> Optional[Any]:
+        content: str | None = None,
+        metadata: dict[str, int] | None = None,
+    ) -> Any | None:
         """Update a skill (thread-safe)."""
         with self._lock:
             return self._skillbook.update_skill(
@@ -193,15 +194,15 @@ class AsyncLearningPipeline:
 
     def __init__(
         self,
-        skillbook: "Skillbook",
-        reflector: "Reflector",
-        skill_manager: "SkillManager",
+        skillbook: Skillbook,
+        reflector: Reflector,
+        skill_manager: SkillManager,
         *,
         max_reflector_workers: int = 3,
         skill_manager_queue_size: int = 100,
         max_refinement_rounds: int = 1,
-        on_error: Optional[Callable[[Exception, LearningTask], None]] = None,
-        on_complete: Optional[Callable[[LearningTask, Any], None]] = None,
+        on_error: Callable[[Exception, LearningTask], None] | None = None,
+        on_complete: Callable[[LearningTask, Any], None] | None = None,
     ) -> None:
         """Initialize the async learning pipeline.
 
@@ -224,7 +225,7 @@ class AsyncLearningPipeline:
         self._on_complete = on_complete
 
         # Thread pool for parallel Reflectors
-        self._reflector_pool: Optional[ThreadPoolExecutor] = None
+        self._reflector_pool: ThreadPoolExecutor | None = None
 
         # Queue for SkillManager (serialized processing)
         self._skill_manager_queue: Queue[ReflectionResult] = Queue(
@@ -232,7 +233,7 @@ class AsyncLearningPipeline:
         )
 
         # SkillManager thread
-        self._skill_manager_thread: Optional[threading.Thread] = None
+        self._skill_manager_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
 
         # Stats
@@ -243,7 +244,7 @@ class AsyncLearningPipeline:
         self._stats_lock = threading.Lock()
 
         # Track pending futures for wait_for_completion
-        self._pending_futures: List[Future] = []
+        self._pending_futures: list[Future] = []
         self._futures_lock = threading.Lock()
 
     # -----------------------------------------------------------------------
@@ -316,7 +317,7 @@ class AsyncLearningPipeline:
     # Task Submission
     # -----------------------------------------------------------------------
 
-    def submit(self, task: LearningTask) -> Optional[Future]:
+    def submit(self, task: LearningTask) -> Future | None:
         """Submit a learning task (non-blocking).
 
         Args:
@@ -347,7 +348,7 @@ class AsyncLearningPipeline:
     # Synchronization
     # -----------------------------------------------------------------------
 
-    def wait_for_completion(self, timeout: Optional[float] = None) -> bool:
+    def wait_for_completion(self, timeout: float | None = None) -> bool:
         """Wait for all pending learning tasks to complete.
 
         Args:
@@ -398,7 +399,7 @@ class AsyncLearningPipeline:
     # -----------------------------------------------------------------------
 
     @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Get pipeline statistics."""
         with self._stats_lock:
             return {
@@ -414,7 +415,7 @@ class AsyncLearningPipeline:
     # Internal Workers
     # -----------------------------------------------------------------------
 
-    def _reflector_worker(self, task: LearningTask) -> Optional[ReflectionResult]:
+    def _reflector_worker(self, task: LearningTask) -> ReflectionResult | None:
         """Run Reflector.reflect() - executes in thread pool.
 
         Can have multiple instances running concurrently.

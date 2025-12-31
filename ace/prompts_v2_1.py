@@ -14,7 +14,7 @@ Based on ACE v2.0 architecture with MCP presentation enhancements.
 """
 
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 # ================================
 # SHARED CONSTANTS
@@ -1183,11 +1183,11 @@ class PromptManager:
             default_version: Default version to use (1.0, 2.0, or 2.1)
         """
         self.default_version = default_version
-        self.usage_stats: Dict[str, int] = {}
-        self.quality_scores: Dict[str, List[float]] = {}
+        self.usage_stats: dict[str, int] = {}
+        self.quality_scores: dict[str, list[float]] = {}
 
     def get_agent_prompt(
-        self, domain: Optional[str] = None, version: Optional[str] = None
+        self, domain: str | None = None, version: str | None = None
     ) -> str:
         """
         Get agent prompt for specific domain and version.
@@ -1239,7 +1239,7 @@ class PromptManager:
 
         return prompt
 
-    def get_reflector_prompt(self, version: Optional[str] = None) -> str:
+    def get_reflector_prompt(self, version: str | None = None) -> str:
         """Get reflector prompt for specific version."""
         version = version or self.default_version
         prompt = self.PROMPTS["reflector"].get(version)
@@ -1262,7 +1262,7 @@ class PromptManager:
 
         return prompt
 
-    def get_skill_manager_prompt(self, version: Optional[str] = None) -> str:
+    def get_skill_manager_prompt(self, version: str | None = None) -> str:
         """Get skill_manager prompt for specific version."""
         version = version or self.default_version
         prompt = self.PROMPTS["skill_manager"].get(version)
@@ -1301,7 +1301,7 @@ class PromptManager:
             self.quality_scores[prompt_id] = []
         self.quality_scores[prompt_id].append(score)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get comprehensive prompt statistics."""
         avg_quality = {}
         for prompt_id, scores in self.quality_scores.items():
@@ -1315,14 +1315,14 @@ class PromptManager:
         }
 
     @staticmethod
-    def list_available_versions() -> Dict[str, list]:
+    def list_available_versions() -> dict[str, list]:
         """List all available prompt versions."""
         return {
             role: list(prompts.keys())
             for role, prompts in PromptManager.PROMPTS.items()
         }
 
-    def compare_versions(self, role: str, test_input: Dict[str, Any]) -> Dict[str, str]:
+    def compare_versions(self, role: str, test_input: dict[str, Any]) -> dict[str, str]:
         """
         Compare different prompt versions for A/B testing.
 
@@ -1354,7 +1354,7 @@ class PromptManager:
 
 def validate_prompt_output_v2_1(
     output: str, role: str
-) -> tuple[bool, list[str], Dict[str, float]]:
+) -> tuple[bool, list[str], dict[str, float]]:
     """
     Enhanced validation for v2.1 prompt outputs with quality metrics.
 
@@ -1569,7 +1569,7 @@ New fields are optional additions only.
 # ================================
 
 
-def compare_prompt_versions(role: str = "agent") -> Dict[str, Any]:
+def compare_prompt_versions(role: str = "agent") -> dict[str, Any]:
     """
     Compare different prompt versions for analysis.
 
@@ -1581,7 +1581,7 @@ def compare_prompt_versions(role: str = "agent") -> Dict[str, Any]:
     """
     import difflib
 
-    comparisons: Dict[str, Any] = {}
+    comparisons: dict[str, Any] = {}
 
     # Get prompts for comparison
     manager = PromptManager()
@@ -1603,7 +1603,7 @@ def compare_prompt_versions(role: str = "agent") -> Dict[str, Any]:
     )
 
     # Count key improvements
-    v21_features: Dict[str, Any] = {
+    v21_features: dict[str, Any] = {
         "quick_reference": "⚡ QUICK REFERENCE ⚡" in v21_prompt,
         "mandatory_markers": v21_prompt.count("MANDATORY"),
         "critical_markers": v21_prompt.count("CRITICAL"),

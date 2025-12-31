@@ -6,35 +6,33 @@ Browser automation agent with learning capabilities using ACE framework.
 Compare this with baseline_browser_use.py to see ACE's value.
 """
 
+import argparse
 import asyncio
 import json
-from typing import List, Dict
 from pathlib import Path
-from dotenv import load_dotenv
-import argparse
-
-from browser_use import Agent, Browser, ChatOpenAI
 
 from ace import (
-    LiteLLMClient,
     Agent as ACEAgent,
-    Reflector,
-    SkillManager,
-    OnlineACE,
-    Sample,
-    TaskEnvironment,
+)
+from ace import (
     EnvironmentResult,
+    LiteLLMClient,
+    OnlineACE,
+    Reflector,
+    Sample,
     Skillbook,
+    SkillManager,
+    TaskEnvironment,
 )
 from ace.observability import configure_opik
+from browser_use import Agent, Browser, ChatOpenAI
+from dotenv import load_dotenv
 
 load_dotenv()
 
+import os
 import threading
 from http.server import HTTPServer, SimpleHTTPRequestHandler
-
-
-import os
 
 os.environ["BROWSER_USE_LOGGING_LEVEL"] = "critical"
 os.environ["ANONYMIZED_TELEMETRY"] = "false"
@@ -174,7 +172,7 @@ class BrowserUseEnvironment(TaskEnvironment):
                 if hasattr(model_output, "evaluation_previous_goal")
                 else ""
             )
-            model_outputs_text += f"Thoughts about step {i+1}: {thinking}\nGoal for step {i+2}: {next_goal}\nEvaluation Previous Goal: {evaluation_previous_goal}\n\n"
+            model_outputs_text += f"Thoughts about step {i + 1}: {thinking}\nGoal for step {i + 2}: {next_goal}\nEvaluation Previous Goal: {evaluation_previous_goal}\n\n"
 
         # Build steps text outside f-string to avoid backslash issue
         done_text = "" if is_done else "not "
@@ -230,7 +228,7 @@ class BrowserUseEnvironment(TaskEnvironment):
             # Run with timeout
             history = await asyncio.wait_for(agent.run(max_steps=10), timeout=240.0)
             return history
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # Try to get steps from history if it exists
             number_of_steps = 25  # default to max_steps
             try:
@@ -283,8 +281,9 @@ class BrowserUseEnvironment(TaskEnvironment):
             tuple: (ace_tokens, agent_tokens, reflector_tokens, skill_manager_tokens)
         """
         try:
-            import opik
             import datetime
+
+            import opik
 
             # Create client and flush to ensure data is sent
             client = opik.Opik()
@@ -295,7 +294,7 @@ class BrowserUseEnvironment(TaskEnvironment):
                 recent_time = self.run_start_time.isoformat().replace("+00:00", "Z")
                 print(f"   🕐 Searching for traces since run start: {recent_time}")
             else:
-                now = datetime.datetime.now(datetime.timezone.utc)
+                now = datetime.datetime.now(datetime.UTC)
                 recent_time = (
                     (now - datetime.timedelta(minutes=10))
                     .isoformat()
@@ -365,7 +364,7 @@ class BrowserUseEnvironment(TaskEnvironment):
             # Calculate total ACE tokens
             ace_tokens = agent_tokens + reflector_tokens + skill_manager_tokens
 
-            print(f"   📊 Role breakdown:")
+            print("   📊 Role breakdown:")
             print(f"      🎯 Agent: {agent_tokens} tokens")
             print(f"      🔍 Reflector: {reflector_tokens} tokens")
             print(f"      📝 SkillManager: {skill_manager_tokens} tokens")
@@ -388,7 +387,7 @@ def main(task_file: str = "task2_form.txt"):
     # Capture start time for trace filtering
     import datetime
 
-    run_start_time = datetime.datetime.now(datetime.timezone.utc)
+    run_start_time = datetime.datetime.now(datetime.UTC)
 
     # Configure Opik if available
     try:
@@ -421,7 +420,7 @@ def main(task_file: str = "task2_form.txt"):
         # Resolve relative to current working directory (original behavior)
         task_file_path = Path(task_file).resolve()
 
-    with open(task_file_path, "r") as f:
+    with open(task_file_path) as f:
         task_content = f.read()
     task_content = "Task:\n\n" + task_content
 
@@ -475,7 +474,7 @@ def main(task_file: str = "task2_form.txt"):
     results = adapter.run(samples, environment)
 
     # Query ACE tokens after all roles have completed
-    print(f"\n💰 Querying ACE token usage after all tasks processed...")
+    print("\n💰 Querying ACE token usage after all tasks processed...")
     import time
 
     time.sleep(5)  # Wait for Opik to index final traces
@@ -500,7 +499,7 @@ def main(task_file: str = "task2_form.txt"):
         avg_steps = total_steps / len(results) if results else 0
 
         print(
-            f"\n✅ Success rate: {successful}/{len(results)} ({100*successful/len(results):.1f}%)"
+            f"\n✅ Success rate: {successful}/{len(results)} ({100 * successful / len(results):.1f}%)"
         )
         print(f"⚡ Average steps: {avg_steps:.1f}")
         print()
@@ -508,7 +507,7 @@ def main(task_file: str = "task2_form.txt"):
             f"{'📊 Steps:':<25} {total_steps:>6} total     {avg_steps:>6.1f} per task"
         )
         print(
-            f"{'🧠 ACE Tokens:':<25} {total_ace_tokens:>6} total     {total_ace_tokens/len(results) if results else 0:>6.1f} per task"
+            f"{'🧠 ACE Tokens:':<25} {total_ace_tokens:>6} total     {total_ace_tokens / len(results) if results else 0:>6.1f} per task"
         )
         print()
         print("🧠 ACE Role Breakdown (Think → Learn):")
@@ -526,16 +525,16 @@ def main(task_file: str = "task2_form.txt"):
     else:
         print("\n⚠️ No results to display")
 
-    print(f"\n✨ Learning enabled - improves after each task")
+    print("\n✨ Learning enabled - improves after each task")
 
     # Show learned strategies
     if adapter.skillbook.skills():
-        print(f"\n🎯 Learned Strategies:")
+        print("\n🎯 Learned Strategies:")
         for i, skill in enumerate(adapter.skillbook.skills(), 1):
             print(f"  {i}. {skill.content}")
 
-    print(f"\n💡 Compare with: python examples/browser-use/baseline_browser_use.py")
-    print(f"   Baseline has no learning - same performance every time")
+    print("\n💡 Compare with: python examples/browser-use/baseline_browser_use.py")
+    print("   Baseline has no learning - same performance every time")
     print("=" * 80)
 
 

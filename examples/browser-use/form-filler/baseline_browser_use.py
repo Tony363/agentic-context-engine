@@ -7,11 +7,9 @@ Compare this with ace_browser_use.py to see ACE's value.
 """
 
 import asyncio
-from typing import List, Dict
-from dotenv import load_dotenv
 
 from browser_use import Agent, Browser, ChatOpenAI
-from pathlib import Path
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -316,7 +314,7 @@ async def run_browser_task(
             "success": status == "SUCCESS",
         }
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         # Get actual steps even on timeout - history should exist
         try:
             steps = (
@@ -362,7 +360,7 @@ def main(task_file: str = "task1_flight_search.txt"):
 
     results = []
 
-    with open(task_file, "r") as f:
+    with open(task_file) as f:
         task = f.read()
 
     result = asyncio.run(run_browser_task(task=task, headless=False))
@@ -378,13 +376,13 @@ def main(task_file: str = "task1_flight_search.txt"):
     avg_steps = total_steps / len(results) if results else 0
 
     print(
-        f"\n✅ Success rate: {successful}/{len(results)} ({100*successful/len(results):.1f}%)"
+        f"\n✅ Success rate: {successful}/{len(results)} ({100 * successful / len(results):.1f}%)"
     )
     print(f"⚡ Average steps: {avg_steps:.1f}")
-    print(f"🚫 No learning - same performance every time")
+    print("🚫 No learning - same performance every time")
 
-    print(f"\n💡 Compare with: python examples/browser-use/ace_browser_use.py")
-    print(f"   ACE learns and improves after each task!")
+    print("\n💡 Compare with: python examples/browser-use/ace_browser_use.py")
+    print("   ACE learns and improves after each task!")
 
 
 if __name__ == "__main__":

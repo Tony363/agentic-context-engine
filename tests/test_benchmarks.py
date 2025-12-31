@@ -4,21 +4,19 @@ Tests for the ACE benchmarking system.
 Tests configuration loading, environment evaluation, and end-to-end benchmark execution.
 """
 
-import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-
-from ace import Sample, EnvironmentResult
+from ace import EnvironmentResult, Sample
 
 # Import benchmark components
 try:
-    from benchmarks.base import BenchmarkConfig, BenchmarkSample, BenchmarkEnvironment
+    from benchmarks.base import BenchmarkConfig, BenchmarkEnvironment, BenchmarkSample
+    from benchmarks.environments import FiNEREnvironment, GenericBenchmarkEnvironment
     from benchmarks.manager import BenchmarkTaskManager
-    from benchmarks.environments import GenericBenchmarkEnvironment, FiNEREnvironment
 
     BENCHMARKS_AVAILABLE = True
 except ImportError:

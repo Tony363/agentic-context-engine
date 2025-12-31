@@ -5,10 +5,9 @@ Domain-checker specific utilities.
 Functions specific to domain availability checking examples.
 """
 
-from typing import List
 
 
-def get_test_domains() -> List[str]:
+def get_test_domains() -> list[str]:
     """
     Get list of test domains to check for availability.
 

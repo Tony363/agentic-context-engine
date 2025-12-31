@@ -11,9 +11,9 @@ Uses real LLM calls (gpt-4o-mini) to show actual behavior.
 
 import os
 import time
-from dotenv import load_dotenv
 
 from ace import ACELiteLLM, Sample, SimpleEnvironment
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -49,7 +49,7 @@ def run_sync_learning():
 
     elapsed = time.time() - start
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  - Samples processed: {len(results)}")
     print(f"  - Time elapsed: {elapsed:.2f}s")
     print(f"  - Strategies learned: {len(agent.skillbook.skills())}")
@@ -89,11 +89,11 @@ def run_async_learning():
 
     results_time = time.time() - start
     print(f"\n✅ Results returned in: {results_time:.2f}s")
-    print(f"   (Learning still running in background...)")
+    print("   (Learning still running in background...)")
 
     # Check learning stats before waiting
     stats = agent.learning_stats
-    print(f"\nLearning stats (before wait):")
+    print("\nLearning stats (before wait):")
     print(f"  - Pipeline running: {stats.get('is_running', 'N/A')}")
 
     # Wait for learning to complete
@@ -104,7 +104,7 @@ def run_async_learning():
 
     total_time = time.time() - start
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  - Samples processed: {len(results)}")
     print(f"  - Results returned in: {results_time:.2f}s")
     print(f"  - Learning wait time: {wait_time:.2f}s")
@@ -112,7 +112,7 @@ def run_async_learning():
     print(f"  - Strategies learned: {len(agent.skillbook.skills())}")
 
     # Show complete skillbook
-    print(f"\n📚 COMPLETE SKILLBOOK:")
+    print("\n📚 COMPLETE SKILLBOOK:")
     if agent.skillbook.skills():
         print(str(agent.skillbook))
     else:

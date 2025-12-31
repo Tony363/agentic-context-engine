@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List, Literal, Union
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Literal, Union
 
 if TYPE_CHECKING:
-    from ..skillbook import Skillbook, SimilarityDecision
+    from ..skillbook import Skillbook
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class MergeOp:
     """
 
     type: Literal["MERGE"] = "MERGE"
-    source_ids: List[str] = None  # type: ignore  # All skills being merged
+    source_ids: list[str] = None  # type: ignore  # All skills being merged
     merged_content: str = ""  # New combined content
     keep_id: str = ""  # Which ID to keep (others deleted)
     reasoning: str = ""
@@ -46,7 +46,7 @@ class KeepOp:
     """Keep both skills separate (they serve different purposes)."""
 
     type: Literal["KEEP"] = "KEEP"
-    skill_ids: List[str] = None  # type: ignore
+    skill_ids: list[str] = None  # type: ignore
     differentiation: str = ""  # How they differ
     reasoning: str = ""
 
@@ -70,8 +70,8 @@ ConsolidationOperation = Union[MergeOp, DeleteOp, KeepOp, UpdateOp]
 
 
 def apply_consolidation_operations(
-    operations: List[ConsolidationOperation],
-    skillbook: "Skillbook",
+    operations: list[ConsolidationOperation],
+    skillbook: Skillbook,
 ) -> None:
     """Apply a list of consolidation operations to a skillbook.
 
@@ -92,7 +92,7 @@ def apply_consolidation_operations(
             logger.warning(f"Unknown operation type: {type(op)}")
 
 
-def _apply_merge(op: MergeOp, skillbook: "Skillbook") -> None:
+def _apply_merge(op: MergeOp, skillbook: Skillbook) -> None:
     """Apply a MERGE operation."""
     keep_skill = skillbook.get_skill(op.keep_id)
     if keep_skill is None:
@@ -124,12 +124,12 @@ def _apply_merge(op: MergeOp, skillbook: "Skillbook") -> None:
 
     # Invalidate embedding (needs recomputation)
     keep_skill.embedding = None
-    keep_skill.updated_at = datetime.now(timezone.utc).isoformat()
+    keep_skill.updated_at = datetime.now(UTC).isoformat()
 
     logger.info(f"MERGE: Completed merge into {op.keep_id}")
 
 
-def _apply_delete(op: DeleteOp, skillbook: "Skillbook") -> None:
+def _apply_delete(op: DeleteOp, skillbook: Skillbook) -> None:
     """Apply a DELETE operation (soft delete)."""
     skill = skillbook.get_skill(op.skill_id)
     if skill is None:
@@ -140,7 +140,7 @@ def _apply_delete(op: DeleteOp, skillbook: "Skillbook") -> None:
     logger.info(f"DELETE: Soft-deleted {op.skill_id}")
 
 
-def _apply_keep(op: KeepOp, skillbook: "Skillbook") -> None:
+def _apply_keep(op: KeepOp, skillbook: Skillbook) -> None:
     """Apply a KEEP operation (store decision)."""
     if len(op.skill_ids) < 2:
         logger.warning("KEEP: Need at least 2 skill IDs")
@@ -154,14 +154,14 @@ def _apply_keep(op: KeepOp, skillbook: "Skillbook") -> None:
             decision = SimilarityDecision(
                 decision="KEEP",
                 reasoning=op.reasoning or op.differentiation,
-                decided_at=datetime.now(timezone.utc).isoformat(),
+                decided_at=datetime.now(UTC).isoformat(),
                 similarity_at_decision=0.0,  # We don't have the score here
             )
             skillbook.set_similarity_decision(id_a, id_b, decision)
             logger.info(f"KEEP: Stored decision for ({id_a}, {id_b})")
 
 
-def _apply_update(op: UpdateOp, skillbook: "Skillbook") -> None:
+def _apply_update(op: UpdateOp, skillbook: Skillbook) -> None:
     """Apply an UPDATE operation."""
     skill = skillbook.get_skill(op.skill_id)
     if skill is None:
@@ -170,5 +170,5 @@ def _apply_update(op: UpdateOp, skillbook: "Skillbook") -> None:
 
     skill.content = op.new_content
     skill.embedding = None  # Needs recomputation
-    skill.updated_at = datetime.now(timezone.utc).isoformat()
+    skill.updated_at = datetime.now(UTC).isoformat()
     logger.info(f"UPDATE: Updated content of {op.skill_id}")

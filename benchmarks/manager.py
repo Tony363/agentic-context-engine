@@ -7,11 +7,10 @@ task discovery, and benchmark instantiation following lm-evaluation-harness patt
 
 from __future__ import annotations
 
-import os
 import sys
-import yaml
 from pathlib import Path
-from typing import Dict, List, Optional, Type
+
+import yaml
 
 # Try to import tomllib (Python 3.11+) or tomli for TOML support
 try:
@@ -44,7 +43,7 @@ class BenchmarkTaskManager:
         >>> available = manager.list_benchmarks()
     """
 
-    def __init__(self, tasks_dir: Optional[Path] = None):
+    def __init__(self, tasks_dir: Path | None = None):
         """
         Initialize the benchmark task manager.
 
@@ -56,11 +55,11 @@ class BenchmarkTaskManager:
             tasks_dir = Path(__file__).parent / "tasks"
 
         self.tasks_dir = Path(tasks_dir)
-        self._configs: Dict[str, BenchmarkConfig] = {}
-        self._benchmarks: Dict[str, BenchmarkEnvironment] = {}
+        self._configs: dict[str, BenchmarkConfig] = {}
+        self._benchmarks: dict[str, BenchmarkEnvironment] = {}
 
         # Register available data loaders
-        self._loaders: Dict[str, DataLoader] = {
+        self._loaders: dict[str, DataLoader] = {
             "huggingface": HuggingFaceLoader(),
         }
 
@@ -101,7 +100,7 @@ class BenchmarkTaskManager:
                 except Exception as e:
                     print(f"Warning: Failed to load TOML config from {toml_file}: {e}")
 
-    def list_benchmarks(self) -> List[str]:
+    def list_benchmarks(self) -> list[str]:
         """Return list of available benchmark task names."""
         return list(self._configs.keys())
 
@@ -157,7 +156,7 @@ class BenchmarkTaskManager:
 
     def _get_environment_class(
         self, config: BenchmarkConfig
-    ) -> Type[BenchmarkEnvironment]:
+    ) -> type[BenchmarkEnvironment]:
         """
         Determine the appropriate environment class for a benchmark.
 
@@ -167,10 +166,10 @@ class BenchmarkTaskManager:
         # Import here to avoid circular imports
         try:
             from .environments import (
-                FiNEREnvironment,
-                XBRLMathEnvironment,
                 AppWorldEnvironment,
+                FiNEREnvironment,
                 GenericBenchmarkEnvironment,
+                XBRLMathEnvironment,
             )
         except ImportError:
             # Fallback to base class if environments module not available
@@ -197,7 +196,7 @@ class BenchmarkTaskManager:
         self._benchmarks.clear()
         self._discover_configs()
 
-    def validate_config(self, task_name: str) -> List[str]:
+    def validate_config(self, task_name: str) -> list[str]:
         """
         Validate a benchmark configuration and return any issues found.
 

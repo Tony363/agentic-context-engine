@@ -8,8 +8,9 @@ to avoid downloading large datasets while supporting caching for repeated access
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
 from functools import lru_cache
-from typing import Dict, Iterator, List, Optional, Any
+from typing import Any
 
 from ..base import DataLoader, get_cache_dir
 from ..processors import get_processor
@@ -36,7 +37,7 @@ class HuggingFaceLoader(DataLoader):
         ...     print(sample["gold_token"], sample["gold_label"])
     """
 
-    def __init__(self, default_cache_dir: Optional[str] = None):
+    def __init__(self, default_cache_dir: str | None = None):
         """
         Initialize HuggingFace loader.
 
@@ -50,7 +51,7 @@ class HuggingFaceLoader(DataLoader):
         """Check if this loader supports the given data source."""
         return source == "huggingface"
 
-    def load(self, **kwargs) -> Iterator[Dict[str, Any]]:
+    def load(self, **kwargs) -> Iterator[dict[str, Any]]:
         """
         Load HuggingFace dataset with streaming support and dataset-specific processing.
 
@@ -165,8 +166,8 @@ class HuggingFaceLoader(DataLoader):
         return os.path.expanduser("~/.cache/huggingface/datasets")
 
     def get_dataset_info(
-        self, dataset_path: str, subset: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, dataset_path: str, subset: str | None = None
+    ) -> dict[str, Any]:
         """
         Get metadata about a HuggingFace dataset without downloading.
 
@@ -201,7 +202,7 @@ class HuggingFaceLoader(DataLoader):
             "license": builder.info.license,
         }
 
-    def validate_dataset(self, dataset_path: str, subset: Optional[str] = None) -> bool:
+    def validate_dataset(self, dataset_path: str, subset: str | None = None) -> bool:
         """
         Validate that a HuggingFace dataset exists and is accessible.
 
@@ -218,7 +219,7 @@ class HuggingFaceLoader(DataLoader):
         except Exception:
             return False
 
-    def list_dataset_configs(self, dataset_path: str) -> List[str]:
+    def list_dataset_configs(self, dataset_path: str) -> list[str]:
         """
         List available configurations/subsets for a dataset.
 

@@ -15,7 +15,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any
 
 # Add project root to path
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,9 +96,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_ace_results(file_path: str) -> List[Dict[str, Any]]:
+def load_ace_results(file_path: str) -> list[dict[str, Any]]:
     """Load ACE results from JSON file."""
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         data = json.load(f)
 
     if "results" in data:
@@ -110,8 +110,8 @@ def load_ace_results(file_path: str) -> List[Dict[str, Any]]:
 
 
 def reconstruct_step_results(
-    results_data: List[Dict[str, Any]]
-) -> List[AdapterStepResult]:
+    results_data: list[dict[str, Any]],
+) -> list[AdapterStepResult]:
     """Reconstruct AdapterStepResult objects from JSON data."""
     step_results = []
 
@@ -147,7 +147,7 @@ def reconstruct_step_results(
     return step_results
 
 
-def analyze_evolution_patterns(results: List[Dict[str, Any]]) -> EvolutionTracker:
+def analyze_evolution_patterns(results: list[dict[str, Any]]) -> EvolutionTracker:
     """Analyze skillbook evolution patterns."""
     print("🔍 Analyzing skillbook evolution patterns...")
 
@@ -184,7 +184,7 @@ def analyze_evolution_patterns(results: List[Dict[str, Any]]) -> EvolutionTracke
     return tracker
 
 
-def analyze_strategy_attribution(results: List[Dict[str, Any]]) -> AttributionAnalyzer:
+def analyze_strategy_attribution(results: list[dict[str, Any]]) -> AttributionAnalyzer:
     """Analyze strategy attribution from results."""
     print("🎯 Analyzing strategy attribution...")
 
@@ -229,7 +229,7 @@ def analyze_strategy_attribution(results: List[Dict[str, Any]]) -> AttributionAn
     return analyzer
 
 
-def analyze_role_interactions(results: List[Dict[str, Any]]) -> InteractionTracer:
+def analyze_role_interactions(results: list[dict[str, Any]]) -> InteractionTracer:
     """Analyze role interactions from results."""
     print("🔄 Analyzing role interactions...")
 
@@ -270,7 +270,7 @@ def analyze_role_interactions(results: List[Dict[str, Any]]) -> InteractionTrace
     return tracer
 
 
-def perform_comparative_analysis(baseline_file: str, ace_file: str) -> Dict[str, Any]:
+def perform_comparative_analysis(baseline_file: str, ace_file: str) -> dict[str, Any]:
     """Perform comparative analysis between baseline and ACE results."""
     print("📊 Performing comparative analysis...")
 
@@ -317,11 +317,11 @@ def perform_comparative_analysis(baseline_file: str, ace_file: str) -> Dict[str,
 
 
 def generate_insights(
-    evolution_tracker: Optional[EvolutionTracker] = None,
-    attribution_analyzer: Optional[AttributionAnalyzer] = None,
-    interaction_tracer: Optional[InteractionTracer] = None,
-    comparison: Optional[Dict] = None,
-) -> List[str]:
+    evolution_tracker: EvolutionTracker | None = None,
+    attribution_analyzer: AttributionAnalyzer | None = None,
+    interaction_tracer: InteractionTracer | None = None,
+    comparison: dict | None = None,
+) -> list[str]:
     """Generate key insights from analysis."""
     insights = []
 
@@ -373,11 +373,11 @@ def generate_insights(
 
 
 def print_summary_report(
-    evolution_tracker: Optional[EvolutionTracker] = None,
-    attribution_analyzer: Optional[AttributionAnalyzer] = None,
-    interaction_tracer: Optional[InteractionTracer] = None,
-    comparison: Optional[Dict] = None,
-    insights: Optional[List[str]] = None,
+    evolution_tracker: EvolutionTracker | None = None,
+    attribution_analyzer: AttributionAnalyzer | None = None,
+    interaction_tracer: InteractionTracer | None = None,
+    comparison: dict | None = None,
+    insights: list[str] | None = None,
 ):
     """Print a comprehensive summary report."""
     print("\n" + "=" * 60)
@@ -386,14 +386,14 @@ def print_summary_report(
 
     if evolution_tracker:
         summary = evolution_tracker.get_evolution_summary()
-        print(f"\n📈 EVOLUTION ANALYSIS:")
+        print("\n📈 EVOLUTION ANALYSIS:")
         print(f"  Total Strategies: {summary.get('total_strategies', 0)}")
         print(f"  Survival Rate: {summary.get('survival_rate', 0):.1%}")
         print(f"  Strategy Growth: {summary.get('skill_growth', 0):+d}")
 
     if attribution_analyzer:
         report = attribution_analyzer.generate_attribution_report()
-        print(f"\n🎯 ATTRIBUTION ANALYSIS:")
+        print("\n🎯 ATTRIBUTION ANALYSIS:")
         print(f"  Active Strategies: {report['summary']['active_skills']}")
         print(
             f"  Avg Attribution Score: {report['summary']['avg_attribution_score']:.3f}"
@@ -402,7 +402,7 @@ def print_summary_report(
 
         top_contributors = report["top_contributors"][:5]
         if top_contributors:
-            print(f"\n🏆 TOP CONTRIBUTORS:")
+            print("\n🏆 TOP CONTRIBUTORS:")
             for i, contributor in enumerate(top_contributors, 1):
                 print(
                     f"  {i}. {contributor['skill_id'][:12]} (Score: {contributor['attribution_score']:.3f})"
@@ -410,20 +410,20 @@ def print_summary_report(
 
     if interaction_tracer:
         report = interaction_tracer.generate_interaction_report()
-        print(f"\n🔄 INTERACTION ANALYSIS:")
+        print("\n🔄 INTERACTION ANALYSIS:")
         print(f"  Total Interactions: {report['summary']['total_interactions']}")
         print(f"  Decision Chains: {report['summary']['decision_chains_identified']}")
         print(f"  Feedback Loops: {report['summary']['feedback_loops_total']}")
 
     if comparison:
-        print(f"\n📊 COMPARATIVE ANALYSIS:")
+        print("\n📊 COMPARATIVE ANALYSIS:")
         for metric, data in comparison["improvements"].items():
             print(
                 f"  {metric.upper()}: {data['baseline']:.3f} → {data['ace']:.3f} ({data['relative']:+.1%})"
             )
 
     if insights:
-        print(f"\n🔍 KEY INSIGHTS:")
+        print("\n🔍 KEY INSIGHTS:")
         for insight in insights:
             print(f"  {insight}")
 
@@ -459,7 +459,7 @@ def main():
         elif args.compare:
             # Comparative analysis mode
             comparison = perform_comparative_analysis(args.compare[0], args.compare[1])
-            print(f"✅ Comparative analysis completed")
+            print("✅ Comparative analysis completed")
 
         elif args.results:
             # Analysis mode
@@ -486,7 +486,7 @@ def main():
                         output_dir / "interaction_traces.json"
                     )
 
-            print(f"✅ Analysis completed")
+            print("✅ Analysis completed")
 
         # Generate insights
         insights = generate_insights(

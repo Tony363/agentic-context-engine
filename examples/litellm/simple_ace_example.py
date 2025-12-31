@@ -6,9 +6,9 @@ This shows the minimal code needed to use ACE with a production LLM.
 """
 
 import os
-from dotenv import load_dotenv
 
 from ace import ACELiteLLM, Sample, SimpleEnvironment
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -44,7 +44,7 @@ def main():
 
     # 5. Test with new question
     answer = agent.ask("What is 5 + 3?")
-    print(f"\nTest question: What is 5 + 3?")
+    print("\nTest question: What is 5 + 3?")
     print(f"Answer: {answer}")
 
 

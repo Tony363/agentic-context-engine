@@ -14,7 +14,6 @@ The simple pattern:
 Named after Kayba AI (kaiba = seahorse in Japanese).
 """
 
-import os
 
 try:
     from dotenv import load_dotenv
@@ -23,15 +22,13 @@ try:
 except ImportError:
     pass
 
-from rich.console import Console
-from rich.panel import Panel
-
-from ace.integrations import ACELiteLLM
-from ace import Sample, SimpleEnvironment
-from ace.observability import configure_opik
-
 # Suppress LiteLLM debug messages
 import litellm
+from ace import Sample, SimpleEnvironment
+from ace.integrations import ACELiteLLM
+from ace.observability import configure_opik
+from rich.console import Console
+from rich.panel import Panel
 
 litellm.suppress_debug_info = True
 
@@ -71,7 +68,7 @@ def main():
         console.print(Panel(agent.skillbook.as_prompt(), style="cyan"))
 
     # Now ask the actual question
-    console.print(f"\n[yellow]━━━ Round 2: Asking About Seahorse ━━━[/yellow]")
+    console.print("\n[yellow]━━━ Round 2: Asking About Seahorse ━━━[/yellow]")
     console.print(f"[bold]Question:[/bold] {question}")
     console.print(
         f"[dim]Skillbook: {len(agent.skillbook.skills())} learned strategies[/dim]\n"
@@ -91,7 +88,7 @@ def main():
     )
 
     # Final ask to show further evolution
-    console.print(f"\n[yellow]━━━ Round 3: Enhanced Knowledge ━━━[/yellow]")
+    console.print("\n[yellow]━━━ Round 3: Enhanced Knowledge ━━━[/yellow]")
     console.print(f"[bold]Question:[/bold] {question}")
     console.print(
         f"[dim]Skillbook: {len(agent.skillbook.skills())} learned strategies[/dim]\n"

@@ -1,7 +1,6 @@
 """Tests for skill deduplication feature."""
 
 import unittest
-from typing import List, Optional
 
 from ace.deduplication import (
     DeduplicationConfig,

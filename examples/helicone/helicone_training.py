@@ -8,23 +8,20 @@ Uses OfflineACE for batch learning over the dataset.
 
 import json
 import os
-import sys
 from pathlib import Path
-from typing import List, Optional
-from dotenv import load_dotenv
-
 
 from ace import (
-    LiteLLMClient,
     Agent,
-    Reflector,
-    SkillManager,
-    OfflineACE,
-    Sample,
-    TaskEnvironment,
     EnvironmentResult,
+    LiteLLMClient,
+    OfflineACE,
+    Reflector,
+    Sample,
     Skillbook,
+    SkillManager,
+    TaskEnvironment,
 )
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -74,8 +71,8 @@ class HeliconeEnvironment(TaskEnvironment):
 
 
 def load_helicone_samples(
-    jsonl_path: str, max_samples: Optional[int] = 100
-) -> List[Sample]:
+    jsonl_path: str, max_samples: int | None = 100
+) -> list[Sample]:
     """
     Load and parse Helicone JSONL data into ACE samples.
 
@@ -90,7 +87,7 @@ def load_helicone_samples(
 
     print(f"Loading Helicone data from: {jsonl_path}")
 
-    with open(jsonl_path, "r") as f:
+    with open(jsonl_path) as f:
         for i, line in enumerate(f):
             if max_samples and i >= max_samples:
                 break
@@ -184,7 +181,7 @@ def main():
         return
 
     # 1. Load Helicone data
-    print(f"📂 Loading samples from Helicone data...")
+    print("📂 Loading samples from Helicone data...")
     samples = load_helicone_samples(HELICONE_JSONL_PATH, max_samples=MAX_SAMPLES)
 
     if not samples:

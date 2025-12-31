@@ -1,18 +1,19 @@
 """Tests for browser-use integration (ACEAgent)."""
 
-import pytest
-from pathlib import Path
 import tempfile
+from pathlib import Path
+
+import pytest
 
 # Skip all tests if browser-use not available
 pytest.importorskip("browser_use")
 
+from ace import LiteLLMClient, Skillbook
 from ace.integrations import (
+    BROWSER_USE_AVAILABLE,
     ACEAgent,
     wrap_skillbook_context,
-    BROWSER_USE_AVAILABLE,
 )
-from ace import Skillbook, Skill, LiteLLMClient
 
 
 class TestWrapSkillbookContext:
@@ -271,8 +272,9 @@ class TestRichFeedbackBuilder:
 
     def test_build_rich_feedback_extracts_basic_info(self):
         """Should extract basic information from history."""
-        from browser_use import ChatBrowserUse
         from unittest.mock import MagicMock
+
+        from browser_use import ChatBrowserUse
 
         agent = ACEAgent(llm=ChatBrowserUse())
 
@@ -290,8 +292,9 @@ class TestRichFeedbackBuilder:
 
     def test_build_rich_feedback_extracts_urls(self):
         """Should extract URLs from chronological steps."""
-        from browser_use import ChatBrowserUse
         from unittest.mock import MagicMock
+
+        from browser_use import ChatBrowserUse
 
         agent = ACEAgent(llm=ChatBrowserUse())
 
@@ -330,8 +333,9 @@ class TestRichFeedbackBuilder:
 
     def test_build_rich_feedback_extracts_errors(self):
         """Should extract step errors from chronological results."""
-        from browser_use import ChatBrowserUse
         from unittest.mock import MagicMock
+
+        from browser_use import ChatBrowserUse
 
         agent = ACEAgent(llm=ChatBrowserUse())
 
@@ -364,8 +368,9 @@ class TestRichFeedbackBuilder:
 
     def test_build_rich_feedback_extracts_actions(self):
         """Should extract actions from chronological steps."""
-        from browser_use import ChatBrowserUse
         from unittest.mock import MagicMock
+
+        from browser_use import ChatBrowserUse
 
         agent = ACEAgent(llm=ChatBrowserUse())
 
@@ -417,8 +422,9 @@ class TestRichFeedbackBuilder:
 
     def test_build_rich_feedback_extracts_thoughts(self):
         """Should extract agent thoughts from chronological steps."""
-        from browser_use import ChatBrowserUse
         from unittest.mock import MagicMock
+
+        from browser_use import ChatBrowserUse
 
         agent = ACEAgent(llm=ChatBrowserUse())
 
@@ -453,8 +459,9 @@ class TestRichFeedbackBuilder:
 
     def test_build_rich_feedback_handles_exceptions(self):
         """Should handle exceptions when extracting trace data."""
-        from browser_use import ChatBrowserUse
         from unittest.mock import MagicMock
+
+        from browser_use import ChatBrowserUse
 
         agent = ACEAgent(llm=ChatBrowserUse())
 
@@ -529,9 +536,9 @@ class TestPromptVersionUsage:
 
     def test_skillbook_wrapper_uses_canonical_function(self):
         """Should use canonical wrap function from prompts_v2_1."""
+        from ace import Skillbook
         from ace.integrations.base import wrap_skillbook_context
         from ace.prompts_v2_1 import wrap_skillbook_for_external_agent
-        from ace import Skillbook
 
         skillbook = Skillbook()
         skillbook.add_skill("general", "Test strategy")
@@ -546,8 +553,8 @@ class TestPromptVersionUsage:
 
     def test_skillbook_wrapper_includes_usage_instructions(self):
         """Should include SKILLBOOK_USAGE_INSTRUCTIONS constant."""
-        from ace.integrations.base import wrap_skillbook_context
         from ace import Skillbook
+        from ace.integrations.base import wrap_skillbook_context
 
         skillbook = Skillbook()
         skillbook.add_skill("general", "Test strategy")
@@ -567,8 +574,9 @@ class TestCitationExtraction:
 
     def test_extract_from_agent_thoughts(self):
         """Extract citations from browser-use agent thoughts."""
-        from browser_use import ChatBrowserUse
         from unittest.mock import MagicMock
+
+        from browser_use import ChatBrowserUse
 
         agent = ACEAgent(llm=ChatBrowserUse())
 
@@ -587,8 +595,9 @@ class TestCitationExtraction:
 
     def test_extract_multiple_citations(self):
         """Extract multiple citations from thoughts."""
-        from browser_use import ChatBrowserUse
         from unittest.mock import MagicMock
+
+        from browser_use import ChatBrowserUse
 
         agent = ACEAgent(llm=ChatBrowserUse())
 
@@ -606,8 +615,9 @@ class TestCitationExtraction:
 
     def test_no_citations_returns_empty(self):
         """Return empty list when no citations found."""
-        from browser_use import ChatBrowserUse
         from unittest.mock import MagicMock
+
+        from browser_use import ChatBrowserUse
 
         agent = ACEAgent(llm=ChatBrowserUse())
 
@@ -638,9 +648,10 @@ class TestCitationExtraction:
         This ensures only valid skill IDs (that exist in skillbook) are passed
         to the Reflector, preventing errors from hallucinated or invalid citations.
         """
-        from browser_use import ChatBrowserUse
         from unittest.mock import MagicMock
+
         from ace import Skillbook
+        from browser_use import ChatBrowserUse
 
         # Create agent with skillbook containing specific skills
         skillbook = Skillbook()
@@ -715,25 +726,25 @@ class TestCitationExtraction:
         assert captured_skill_ids is not None, "skill_ids not captured"
 
         # Should contain valid IDs
-        assert (
-            skill1.id in captured_skill_ids
-        ), f"Valid ID {skill1.id} should be included"
-        assert (
-            skill2.id in captured_skill_ids
-        ), f"Valid ID {skill2.id} should be included"
+        assert skill1.id in captured_skill_ids, (
+            f"Valid ID {skill1.id} should be included"
+        )
+        assert skill2.id in captured_skill_ids, (
+            f"Valid ID {skill2.id} should be included"
+        )
 
         # Should NOT contain invalid IDs
-        assert (
-            "nonexistent-99999" not in captured_skill_ids
-        ), "Invalid ID should be filtered out"
-        assert (
-            "fake-12345" not in captured_skill_ids
-        ), "Invalid ID should be filtered out"
+        assert "nonexistent-99999" not in captured_skill_ids, (
+            "Invalid ID should be filtered out"
+        )
+        assert "fake-12345" not in captured_skill_ids, (
+            "Invalid ID should be filtered out"
+        )
 
         # Should have exactly 2 IDs (the valid ones)
-        assert (
-            len(captured_skill_ids) == 2
-        ), f"Expected 2 valid IDs, got {len(captured_skill_ids)}: {captured_skill_ids}"
+        assert len(captured_skill_ids) == 2, (
+            f"Expected 2 valid IDs, got {len(captured_skill_ids)}: {captured_skill_ids}"
+        )
 
 
 @pytest.mark.requires_api
@@ -767,8 +778,9 @@ class TestBackwardsCompatibility:
 
         Regression test for: Initial query duplication and missing trace in reasoning field.
         """
+        from unittest.mock import MagicMock
+
         from browser_use import ChatBrowserUse
-        from unittest.mock import MagicMock, patch
 
         agent = ACEAgent(llm=ChatBrowserUse(), ace_model="gpt-4o-mini")
 
@@ -858,9 +870,9 @@ class TestBackwardsCompatibility:
         reasoning = captured_agent_output.reasoning
 
         # 1. Reasoning should NOT just be the task description
-        assert (
-            reasoning != "Browser automation task: Test task"
-        ), "Reasoning should not be just task description (regression: initial implementation)"
+        assert reasoning != "Browser automation task: Test task", (
+            "Reasoning should not be just task description (regression: initial implementation)"
+        )
 
         # 2. Reasoning should contain the full trace (not just summary)
         assert len(reasoning) > 200, (
@@ -869,32 +881,32 @@ class TestBackwardsCompatibility:
         )
 
         # 3. Reasoning should contain step-by-step execution details
-        assert (
-            "Step 1" in reasoning or "--- Step 1 ---" in reasoning
-        ), "Reasoning should contain Step 1 details"
-        assert (
-            "Step 2" in reasoning or "--- Step 2 ---" in reasoning
-        ), "Reasoning should contain Step 2 details"
+        assert "Step 1" in reasoning or "--- Step 1 ---" in reasoning, (
+            "Reasoning should contain Step 1 details"
+        )
+        assert "Step 2" in reasoning or "--- Step 2 ---" in reasoning, (
+            "Reasoning should contain Step 2 details"
+        )
 
         # 4. Reasoning should contain agent thoughts
-        assert (
-            "Step 1 memory" in reasoning or "memory" in reasoning.lower()
-        ), "Reasoning should contain agent's memory/thoughts"
+        assert "Step 1 memory" in reasoning or "memory" in reasoning.lower(), (
+            "Reasoning should contain agent's memory/thoughts"
+        )
 
         # 5. Reasoning should contain actions taken
-        assert (
-            "navigate" in reasoning or "Action" in reasoning
-        ), "Reasoning should contain actions taken"
+        assert "navigate" in reasoning or "Action" in reasoning, (
+            "Reasoning should contain actions taken"
+        )
 
         # 6. Reasoning should contain execution results
-        assert (
-            "Result" in reasoning or "success" in reasoning.lower()
-        ), "Reasoning should contain execution results"
+        assert "Result" in reasoning or "success" in reasoning.lower(), (
+            "Reasoning should contain execution results"
+        )
 
         # 7. Verify trace structure markers are present
-        assert (
-            "BROWSER EXECUTION TRACE" in reasoning or "Step 1" in reasoning
-        ), "Reasoning should have trace structure markers"
+        assert "BROWSER EXECUTION TRACE" in reasoning or "Step 1" in reasoning, (
+            "Reasoning should have trace structure markers"
+        )
 
         print(
             f"✅ Trace properly passed to Reflector: {len(reasoning)} characters with full execution details"

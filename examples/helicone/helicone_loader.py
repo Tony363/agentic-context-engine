@@ -6,9 +6,9 @@ Extracts conversation traces, tool usage patterns, and performance metrics.
 """
 
 import json
-from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -17,8 +17,8 @@ class ToolCall:
 
     turn_index: int
     tool_name: str
-    tool_input: Dict[str, Any]
-    tool_result: Optional[Dict[str, Any]] = None
+    tool_input: dict[str, Any]
+    tool_result: dict[str, Any] | None = None
 
 
 @dataclass
@@ -27,8 +27,8 @@ class ConversationTurn:
 
     turn_index: int
     role: str  # 'user' or 'assistant'
-    text_content: List[str]
-    tool_calls: List[ToolCall]
+    text_content: list[str]
+    tool_calls: list[ToolCall]
     has_images: bool = False
 
 
@@ -43,7 +43,7 @@ class HeliconeTrace:
 
     # Conversation data
     system_prompt: str
-    conversation: List[ConversationTurn]
+    conversation: list[ConversationTurn]
 
     # Performance metrics
     total_tokens: int
@@ -59,7 +59,7 @@ class HeliconeTrace:
     user_id: str
     cache_enabled: bool
 
-    def get_tool_sequence(self) -> List[str]:
+    def get_tool_sequence(self) -> list[str]:
         """Get ordered list of all tool names used"""
         tools = []
         for turn in self.conversation:
@@ -67,7 +67,7 @@ class HeliconeTrace:
                 tools.append(tool_call.tool_name)
         return tools
 
-    def get_tool_stats(self) -> Dict[str, int]:
+    def get_tool_stats(self) -> dict[str, int]:
         """Get count of each tool used"""
         from collections import Counter
 
@@ -94,12 +94,12 @@ class HeliconeLoader:
 
     def load(self) -> HeliconeTrace:
         """Load a single Helicone trace from JSON file"""
-        with open(self.file_path, "r", encoding="utf-8", errors="replace") as f:
+        with open(self.file_path, encoding="utf-8", errors="replace") as f:
             data = json.loads(f.read(), strict=False)
 
         return self._parse_trace(data)
 
-    def _parse_trace(self, data: Dict[str, Any]) -> HeliconeTrace:
+    def _parse_trace(self, data: dict[str, Any]) -> HeliconeTrace:
         """Parse raw JSON data into HeliconeTrace object"""
 
         # Extract basic info
@@ -158,7 +158,7 @@ class HeliconeLoader:
             cache_enabled=cache_enabled,
         )
 
-    def _parse_messages(self, messages: List[Dict[str, Any]]) -> List[ConversationTurn]:
+    def _parse_messages(self, messages: list[dict[str, Any]]) -> list[ConversationTurn]:
         """Parse messages into ConversationTurn objects"""
         turns = []
 
@@ -211,7 +211,7 @@ class HeliconeLoader:
 
         return turns
 
-    def extract_training_samples(self, trace: HeliconeTrace) -> List[Dict[str, Any]]:
+    def extract_training_samples(self, trace: HeliconeTrace) -> list[dict[str, Any]]:
         """
         Extract training samples for ACE from the trace.
         Each sample represents a decision point where the agent chose an action.
@@ -270,28 +270,28 @@ def main():
     print(f"Provider: {trace.provider}")
     print(f"Created: {trace.created_at}")
 
-    print(f"\n📊 CONVERSATION STATS")
+    print("\n📊 CONVERSATION STATS")
     print(f"   Total turns: {len(trace.conversation)}")
     print(f"   System prompt: {len(trace.system_prompt)} chars")
 
-    print(f"\n🔧 TOOL USAGE")
+    print("\n🔧 TOOL USAGE")
     tool_stats = trace.get_tool_stats()
     for tool, count in sorted(tool_stats.items(), key=lambda x: x[1], reverse=True):
         print(f"   {tool}: {count} calls")
 
-    print(f"\n💰 PERFORMANCE")
+    print("\n💰 PERFORMANCE")
     print(f"   Total tokens: {trace.total_tokens:,}")
     print(f"   Cost: ${trace.cost:.4f}")
     print(f"   Cost per token: ${trace.get_cost_per_token():.6f}")
     print(f"   Cache effectiveness: {trace.get_cache_effectiveness():.1f}%")
     print(f"   Latency: {trace.delay_ms}ms")
 
-    print(f"\n🎯 TRAINING SAMPLES")
+    print("\n🎯 TRAINING SAMPLES")
     samples = loader.extract_training_samples(trace)
     print(f"   Extracted {len(samples)} training samples")
 
     if samples:
-        print(f"\n   First sample:")
+        print("\n   First sample:")
         first = samples[0]
         print(f"      Turn: {first['turn_index']}")
         print(f"      Tool: {first['decision']['tool_name']}")

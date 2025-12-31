@@ -11,9 +11,9 @@ Requires: OPENAI_API_KEY (for embeddings), ANTHROPIC_API_KEY (for LLM)
 """
 
 import os
-from dotenv import load_dotenv
 
-from ace import ACELiteLLM, Sample, SimpleEnvironment, DeduplicationConfig, Skillbook
+from ace import ACELiteLLM, DeduplicationConfig, Sample, SimpleEnvironment, Skillbook
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -56,7 +56,7 @@ def main():
     )
     agent.skillbook = skillbook  # Use our duplicate skillbook
 
-    print(f"\n2. Running learning with deduplication enabled...")
+    print("\n2. Running learning with deduplication enabled...")
     print(f"   - Similarity threshold: {dedup_config.similarity_threshold}")
     print(f"   - Embedding model: {dedup_config.embedding_model}")
 
@@ -71,11 +71,11 @@ def main():
     # Step 4: Check results
     skills_after = agent.skillbook.skills()
 
-    print(f"\n3. Results:")
+    print("\n3. Results:")
     print(f"   - Skills before: {len(skills_before)}")
     print(f"   - Skills after:  {len(skills_after)}")
 
-    print(f"\n   Current skillbook:")
+    print("\n   Current skillbook:")
     for s in skills_after:
         print(f"   [{s.section}] {s.content}")
 

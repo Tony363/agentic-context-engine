@@ -96,8 +96,8 @@ skillbook.save_to_file("learned.json")
 - Out-of-box wrappers: ACELiteLLM, ACEAgent (browser-use), ACELangChain
 """
 
-from ..skillbook import Skillbook
 from ..prompts_v2_1 import wrap_skillbook_for_external_agent
+from ..skillbook import Skillbook
 
 
 def wrap_skillbook_context(skillbook: Skillbook) -> str:

@@ -5,16 +5,15 @@ validation and intelligent retry for Agent, Reflector, and SkillManager roles.
 """
 
 import unittest
-from typing import Any, Type, TypeVar
+from typing import Any, TypeVar
 from unittest.mock import Mock, patch
 
 import pytest
-from pydantic import BaseModel, ValidationError
-
-from ace import Agent, Reflector, SkillManager, Skillbook
+from ace import Agent, Reflector, Skillbook, SkillManager
 from ace.llm import LLMClient, LLMResponse
 from ace.roles import AgentOutput, ReflectorOutput, SkillManagerOutput, SkillTag
 from ace.updates import UpdateBatch
+from pydantic import BaseModel, ValidationError
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -54,7 +53,7 @@ class MockInstructorClient(LLMClient):
     def complete_structured(
         self,
         prompt: str,
-        response_model: Type[T],
+        response_model: type[T],
         **kwargs: Any,
     ) -> T:
         """
@@ -446,10 +445,9 @@ class TestInstructorClaudeParameterResolution(unittest.TestCase):
 
         This is the core regression test - if this fails, Claude learning will break.
         """
-        from ace.llm_providers.litellm_client import LiteLLMClient, LiteLLMConfig
         from ace.llm_providers.instructor_client import InstructorClient
+        from ace.llm_providers.litellm_client import LiteLLMClient, LiteLLMConfig
         from ace.roles import AgentOutput
-        import instructor
 
         # Create a LiteLLM client with Claude model
         config = LiteLLMConfig(
@@ -502,8 +500,8 @@ class TestInstructorClaudeParameterResolution(unittest.TestCase):
 
     def test_resolve_sampling_params_is_called_for_claude(self):
         """Test that _resolve_sampling_params is actually called in InstructorClient."""
-        from ace.llm_providers.litellm_client import LiteLLMClient, LiteLLMConfig
         from ace.llm_providers.instructor_client import InstructorClient
+        from ace.llm_providers.litellm_client import LiteLLMClient, LiteLLMConfig
         from ace.roles import AgentOutput
 
         # Create a LiteLLM client with Claude model
@@ -555,8 +553,8 @@ class TestInstructorClientCredentialForwarding(unittest.TestCase):
     @patch("ace.llm_providers.instructor_client.completion")
     def test_instructor_forwards_api_key(self, mock_completion):
         """Test that InstructorClient forwards api_key to LiteLLM calls."""
-        from ace.llm_providers.litellm_client import LiteLLMClient
         from ace.llm_providers.instructor_client import InstructorClient
+        from ace.llm_providers.litellm_client import LiteLLMClient
 
         base_llm = LiteLLMClient(model="openai/custom-model", api_key="sk-test-key-123")
         instructor_client = InstructorClient(base_llm)
@@ -590,8 +588,8 @@ class TestInstructorClientCredentialForwarding(unittest.TestCase):
     @patch("ace.llm_providers.instructor_client.completion")
     def test_instructor_forwards_api_base(self, mock_completion):
         """Test that InstructorClient forwards api_base to LiteLLM calls."""
-        from ace.llm_providers.litellm_client import LiteLLMClient
         from ace.llm_providers.instructor_client import InstructorClient
+        from ace.llm_providers.litellm_client import LiteLLMClient
 
         base_llm = LiteLLMClient(
             model="openai/custom-model",
@@ -629,8 +627,8 @@ class TestInstructorClientCredentialForwarding(unittest.TestCase):
     @patch("ace.llm_providers.instructor_client.completion")
     def test_instructor_forwards_extra_headers(self, mock_completion):
         """Test that InstructorClient forwards extra_headers to LiteLLM calls."""
-        from ace.llm_providers.litellm_client import LiteLLMClient
         from ace.llm_providers.instructor_client import InstructorClient
+        from ace.llm_providers.litellm_client import LiteLLMClient
 
         headers = {"X-Custom-Header": "custom-value"}
         base_llm = LiteLLMClient(model="gpt-4", extra_headers=headers)
@@ -665,8 +663,8 @@ class TestInstructorClientCredentialForwarding(unittest.TestCase):
     @patch("ace.llm_providers.instructor_client.completion")
     def test_instructor_forwards_ssl_verify(self, mock_completion):
         """Test that InstructorClient forwards ssl_verify to LiteLLM calls."""
-        from ace.llm_providers.litellm_client import LiteLLMClient
         from ace.llm_providers.instructor_client import InstructorClient
+        from ace.llm_providers.litellm_client import LiteLLMClient
 
         base_llm = LiteLLMClient(model="gpt-4", ssl_verify=False)
         instructor_client = InstructorClient(base_llm)

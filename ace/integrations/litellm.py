@@ -39,12 +39,12 @@ Example:
     agent = ACELiteLLM(model="gpt-4o-mini", skillbook_path="my_agent.json")
 """
 
-from typing import TYPE_CHECKING, List, Optional, Dict, Any, Tuple, Union
+from typing import TYPE_CHECKING, Any, Optional
 
-from ..skillbook import Skillbook
-from ..roles import Agent, Reflector, SkillManager, AgentOutput
 from ..adaptation import OfflineACE, Sample, TaskEnvironment
 from ..prompts_v2_1 import PromptManager
+from ..roles import Agent, AgentOutput, Reflector, SkillManager
+from ..skillbook import Skillbook
 
 if TYPE_CHECKING:
     from ..deduplication import DeduplicationConfig
@@ -104,13 +104,13 @@ class ACELiteLLM:
         max_tokens: int = 2048,
         temperature: float = 0.0,
         # Authentication & endpoint
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
         # HTTP/SSL settings
-        extra_headers: Optional[Dict[str, str]] = None,
-        ssl_verify: Optional[Union[bool, str]] = None,
+        extra_headers: dict[str, str] | None = None,
+        ssl_verify: bool | str | None = None,
         # ACE-specific settings
-        skillbook_path: Optional[str] = None,
+        skillbook_path: str | None = None,
         is_learning: bool = True,
         dedup_config: Optional["DeduplicationConfig"] = None,
         # Pass-through for advanced LiteLLM options
@@ -219,10 +219,10 @@ class ACELiteLLM:
         )
 
         # Store ACE reference for async learning control
-        self._ace: Optional[OfflineACE] = None
+        self._ace: OfflineACE | None = None
 
         # Store last interaction for learn_from_feedback()
-        self._last_interaction: Optional[Tuple[str, AgentOutput]] = None
+        self._last_interaction: tuple[str, AgentOutput] | None = None
 
     def ask(self, question: str, context: str = "") -> str:
         """
@@ -262,13 +262,13 @@ class ACELiteLLM:
 
     def learn(
         self,
-        samples: List[Sample],
+        samples: list[Sample],
         environment: TaskEnvironment,
         epochs: int = 1,
         async_learning: bool = False,
         max_reflector_workers: int = 3,
-        checkpoint_interval: Optional[int] = None,
-        checkpoint_dir: Optional[str] = None,
+        checkpoint_interval: int | None = None,
+        checkpoint_dir: str | None = None,
     ):
         """
         Learn from examples (offline learning).
@@ -347,7 +347,7 @@ class ACELiteLLM:
     def learn_from_feedback(
         self,
         feedback: str,
-        ground_truth: Optional[str] = None,
+        ground_truth: str | None = None,
     ) -> bool:
         """
         Learn from the last ask() interaction.
@@ -467,7 +467,7 @@ class ACELiteLLM:
 
         return wrap_skillbook_context(self.skillbook)
 
-    def wait_for_learning(self, timeout: Optional[float] = None) -> bool:
+    def wait_for_learning(self, timeout: float | None = None) -> bool:
         """
         Wait for async learning to complete.
 
@@ -491,7 +491,7 @@ class ACELiteLLM:
         return self._ace.wait_for_learning(timeout)
 
     @property
-    def learning_stats(self) -> Dict[str, Any]:
+    def learning_stats(self) -> dict[str, Any]:
         """
         Get async learning statistics.
 

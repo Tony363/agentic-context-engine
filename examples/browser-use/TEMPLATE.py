@@ -7,7 +7,7 @@ Copy this file and customize for your use case.
 """
 
 import asyncio
-from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -34,7 +34,7 @@ async def main():
 
         try:
             history = await agent.run(task=task)
-            print(f"✅ Completed")
+            print("✅ Completed")
         except Exception as e:
             print(f"❌ Failed: {e}")
 

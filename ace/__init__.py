@@ -1,50 +1,51 @@
 """Agentic Context Engineering (ACE) reproduction framework."""
 
 from typing import Optional
-from .skillbook import Skill, Skillbook
-from .updates import UpdateOperation, UpdateBatch
-from .llm import LLMClient, DummyLLMClient, TransformersLLMClient
-from .roles import (
-    Agent,
-    ReplayAgent,
-    Reflector,
-    SkillManager,
-    AgentOutput,
-    ReflectorOutput,
-    SkillManagerOutput,
-)
+
 from .adaptation import (
+    ACEBase,
+    ACEStepResult,
+    EnvironmentResult,
     OfflineACE,
     OnlineACE,
-    ACEBase,
     Sample,
-    TaskEnvironment,
     SimpleEnvironment,
-    EnvironmentResult,
-    ACEStepResult,
+    TaskEnvironment,
 )
 from .async_learning import (
+    AsyncLearningPipeline,
     LearningTask,
     ReflectionResult,
     ThreadSafeSkillbook,
-    AsyncLearningPipeline,
 )
 
 # Import optional feature detection
-from .features import has_opik, has_litellm
+from .features import has_litellm, has_opik
+from .llm import DummyLLMClient, LLMClient, TransformersLLMClient
+from .roles import (
+    Agent,
+    AgentOutput,
+    Reflector,
+    ReflectorOutput,
+    ReplayAgent,
+    SkillManager,
+    SkillManagerOutput,
+)
+from .skillbook import Skill, Skillbook
+from .updates import UpdateBatch, UpdateOperation
 
 # Import observability components if available
 if has_opik():
     try:
         from .observability import OpikIntegration as _OpikIntegration
 
-        OpikIntegration: Optional[type] = _OpikIntegration
+        OpikIntegration: type | None = _OpikIntegration
         OBSERVABILITY_AVAILABLE = True
     except ImportError:
-        OpikIntegration: Optional[type] = None  # type: ignore
+        OpikIntegration: type | None = None  # type: ignore
         OBSERVABILITY_AVAILABLE = False
 else:
-    OpikIntegration: Optional[type] = None  # type: ignore
+    OpikIntegration: type | None = None  # type: ignore
     OBSERVABILITY_AVAILABLE = False
 
 # Import production LLM clients if available
@@ -52,42 +53,56 @@ if has_litellm():
     try:
         from .llm_providers import LiteLLMClient as _LiteLLMClient
 
-        LiteLLMClient: Optional[type] = _LiteLLMClient
+        LiteLLMClient: type | None = _LiteLLMClient
         LITELLM_AVAILABLE = True
     except ImportError:
-        LiteLLMClient: Optional[type] = None  # type: ignore
+        LiteLLMClient: type | None = None  # type: ignore
         LITELLM_AVAILABLE = False
 else:
-    LiteLLMClient: Optional[type] = None  # type: ignore
+    LiteLLMClient: type | None = None  # type: ignore
     LITELLM_AVAILABLE = False
 
 # Import integrations (LiteLLM, browser-use, LangChain, Claude Code, etc.) if available
 try:
     from .integrations import (
-        ACELiteLLM as _ACELiteLLM,
-        ACEAgent as _ACEAgent,
-        ACELangChain as _ACELangChain,
-        ACEClaudeCode as _ACEClaudeCode,
-        wrap_skillbook_context as _wrap_skillbook_context,
         BROWSER_USE_AVAILABLE as _BROWSER_USE_AVAILABLE,
-        LANGCHAIN_AVAILABLE as _LANGCHAIN_AVAILABLE,
+    )
+    from .integrations import (
         CLAUDE_CODE_AVAILABLE as _CLAUDE_CODE_AVAILABLE,
     )
+    from .integrations import (
+        LANGCHAIN_AVAILABLE as _LANGCHAIN_AVAILABLE,
+    )
+    from .integrations import (
+        ACEAgent as _ACEAgent,
+    )
+    from .integrations import (
+        ACEClaudeCode as _ACEClaudeCode,
+    )
+    from .integrations import (
+        ACELangChain as _ACELangChain,
+    )
+    from .integrations import (
+        ACELiteLLM as _ACELiteLLM,
+    )
+    from .integrations import (
+        wrap_skillbook_context as _wrap_skillbook_context,
+    )
 
-    ACELiteLLM: Optional[type] = _ACELiteLLM
-    ACEAgent: Optional[type] = _ACEAgent
-    ACELangChain: Optional[type] = _ACELangChain
-    ACEClaudeCode: Optional[type] = _ACEClaudeCode
-    wrap_skillbook_context: Optional[type] = _wrap_skillbook_context  # type: ignore
+    ACELiteLLM: type | None = _ACELiteLLM
+    ACEAgent: type | None = _ACEAgent
+    ACELangChain: type | None = _ACELangChain
+    ACEClaudeCode: type | None = _ACEClaudeCode
+    wrap_skillbook_context: type | None = _wrap_skillbook_context  # type: ignore
     BROWSER_USE_AVAILABLE = _BROWSER_USE_AVAILABLE
     LANGCHAIN_AVAILABLE = _LANGCHAIN_AVAILABLE
     CLAUDE_CODE_AVAILABLE = _CLAUDE_CODE_AVAILABLE
 except ImportError:
-    ACELiteLLM: Optional[type] = None  # type: ignore
-    ACEAgent: Optional[type] = None  # type: ignore
-    ACELangChain: Optional[type] = None  # type: ignore
-    ACEClaudeCode: Optional[type] = None  # type: ignore
-    wrap_skillbook_context: Optional[type] = None  # type: ignore
+    ACELiteLLM: type | None = None  # type: ignore
+    ACEAgent: type | None = None  # type: ignore
+    ACELangChain: type | None = None  # type: ignore
+    ACEClaudeCode: type | None = None  # type: ignore
+    wrap_skillbook_context: type | None = None  # type: ignore
     BROWSER_USE_AVAILABLE = False
     LANGCHAIN_AVAILABLE = False
     CLAUDE_CODE_AVAILABLE = False

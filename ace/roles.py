@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .updates import UpdateBatch
 from .llm import LLMClient
-from .skillbook import Skillbook
 from .prompts_v2_1 import PromptManager
+from .skillbook import Skillbook
+from .updates import UpdateBatch
 
 # Use PromptManager to get v2.1 prompts with {current_date} filled in
 _prompt_manager = PromptManager(default_version="2.1")
@@ -30,12 +31,13 @@ try:
     from .observability.tracers import maybe_track
 except ImportError:
     # Mock decorator if observability not available
-    from typing import TypeVar, Callable
+    from collections.abc import Callable
+    from typing import TypeVar
 
     F = TypeVar("F", bound=Callable[..., Any])
 
     def maybe_track(
-        name: Optional[str] = None, tags: Optional[List[str]] = None, **kwargs: Any
+        name: str | None = None, tags: list[str] | None = None, **kwargs: Any
     ) -> Callable[[F], F]:
         def decorator(func: F) -> F:
             return func
@@ -43,7 +45,7 @@ except ImportError:
         return decorator
 
 
-def _safe_json_loads(text: str) -> Dict[str, Any]:
+def _safe_json_loads(text: str) -> dict[str, Any]:
     # Strip markdown code blocks if present
     text = text.strip()
 
@@ -80,11 +82,11 @@ def _safe_json_loads(text: str) -> Dict[str, Any]:
     return data
 
 
-def _format_optional(value: Optional[str]) -> str:
+def _format_optional(value: str | None) -> str:
     return value or "(none)"
 
 
-def extract_cited_skill_ids(text: str) -> List[str]:
+def extract_cited_skill_ids(text: str) -> list[str]:
     """
     Extract skill IDs cited in text using [id-format] notation.
 
@@ -127,10 +129,10 @@ class AgentOutput(BaseModel):
 
     reasoning: str = Field(..., description="Step-by-step reasoning process")
     final_answer: str = Field(..., description="The final answer to the question")
-    skill_ids: List[str] = Field(
+    skill_ids: list[str] = Field(
         default_factory=list, description="IDs of strategies cited in reasoning"
     )
-    raw: Dict[str, Any] = Field(
+    raw: dict[str, Any] = Field(
         default_factory=dict, description="Raw LLM response data"
     )
 
@@ -200,9 +202,9 @@ class Agent:
         self,
         *,
         question: str,
-        context: Optional[str],
+        context: str | None,
         skillbook: Skillbook,
-        reflection: Optional[str] = None,
+        reflection: str | None = None,
         **kwargs: Any,
     ) -> AgentOutput:
         return self._generate_impl(
@@ -217,9 +219,9 @@ class Agent:
         self,
         *,
         question: str,
-        context: Optional[str],
+        context: str | None,
         skillbook: Skillbook,
-        reflection: Optional[str] = None,
+        reflection: str | None = None,
         **kwargs: Any,
     ) -> AgentOutput:
         """
@@ -297,14 +299,14 @@ class ReplayAgent:
     """
 
     def __init__(
-        self, responses: Optional[Dict[str, str]] = None, default_response: str = ""
+        self, responses: dict[str, str] | None = None, default_response: str = ""
     ) -> None:
         self.responses = responses if responses is not None else {}
         self.default_response = default_response
 
     def _extract_response_from_sample(
         self, sample: Any
-    ) -> tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         """
         Extract response from sample object using multiple fallback strategies.
 
@@ -344,9 +346,9 @@ class ReplayAgent:
         self,
         *,
         question: str,
-        context: Optional[str],
+        context: str | None,
         skillbook: Skillbook,
-        reflection: Optional[str] = None,
+        reflection: str | None = None,
         **kwargs: Any,
     ) -> AgentOutput:
         """
@@ -406,7 +408,7 @@ class ReplayAgent:
             )
 
         # Create metadata for observability
-        reasoning_map: Dict[str, str] = {
+        reasoning_map: dict[str, str] = {
             "sample_metadata": "[Replayed from sample.metadata]",
             "sample_dict_metadata": "[Replayed from sample dict metadata]",
             "sample_dict_direct": "[Replayed from sample dict]",
@@ -475,13 +477,13 @@ class ReflectorOutput(BaseModel):
     key_insight: str = Field(
         ..., description="The main lesson learned from this iteration"
     )
-    extracted_learnings: List[ExtractedLearning] = Field(
+    extracted_learnings: list[ExtractedLearning] = Field(
         default_factory=list, description="Learnings extracted from task execution"
     )
-    skill_tags: List[SkillTag] = Field(
+    skill_tags: list[SkillTag] = Field(
         default_factory=list, description="Classifications of strategy effectiveness"
     )
-    raw: Dict[str, Any] = Field(
+    raw: dict[str, Any] = Field(
         default_factory=dict, description="Raw LLM response data"
     )
 
@@ -545,8 +547,8 @@ class Reflector:
         question: str,
         agent_output: AgentOutput,
         skillbook: Skillbook,
-        ground_truth: Optional[str] = None,
-        feedback: Optional[str] = None,
+        ground_truth: str | None = None,
+        feedback: str | None = None,
         **kwargs: Any,
     ) -> ReflectorOutput:
         return self._reflect_impl(
@@ -564,8 +566,8 @@ class Reflector:
         question: str,
         agent_output: AgentOutput,
         skillbook: Skillbook,
-        ground_truth: Optional[str],
-        feedback: Optional[str],
+        ground_truth: str | None,
+        feedback: str | None,
         max_refinement_rounds: int = 1,
         **kwargs: Any,
     ) -> ReflectorOutput:
@@ -601,11 +603,11 @@ class SkillManagerOutput(BaseModel):
     update: UpdateBatch = Field(
         ..., description="Batch of update operations to apply to skillbook"
     )
-    consolidation_operations: Optional[List[Dict[str, Any]]] = Field(
+    consolidation_operations: list[dict[str, Any]] | None = Field(
         default=None,
         description="Operations to consolidate similar skills (MERGE, DELETE, KEEP, UPDATE)",
     )
-    raw: Dict[str, Any] = Field(
+    raw: dict[str, Any] = Field(
         default_factory=dict, description="Raw LLM response data"
     )
 
@@ -677,7 +679,7 @@ class SkillManager:
         prompt_template: str = SKILL_MANAGER_PROMPT,
         *,
         max_retries: int = 3,
-        dedup_manager: Optional["DeduplicationManager"] = None,
+        dedup_manager: DeduplicationManager | None = None,
     ) -> None:
         # Auto-wrap with Instructor if not already wrapped
         # Use duck typing to detect Instructor capability (supports mocking)
@@ -798,7 +800,7 @@ class SkillManager:
 
 
 def _make_skillbook_excerpt(skillbook: Skillbook, skill_ids: Sequence[str]) -> str:
-    lines: List[str] = []
+    lines: list[str] = []
     seen = set()
     for skill_id in skill_ids:
         if skill_id in seen:

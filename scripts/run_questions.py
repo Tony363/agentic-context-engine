@@ -7,12 +7,12 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from difflib import SequenceMatcher
 from pathlib import Path
 from statistics import mean
-from typing import Dict, Iterable, List
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -20,13 +20,13 @@ if str(ROOT) not in sys.path:
 
 from ace import (  # noqa: E402
     AdapterStepResult,
-    SkillManager,
-    EnvironmentResult,
     Agent,
+    EnvironmentResult,
     OfflineACE,
-    Skillbook,
     Reflector,
     Sample,
+    Skillbook,
+    SkillManager,
     TaskEnvironment,
     TransformersLLMClient,
 )
@@ -110,9 +110,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_questions(path: Path) -> List[QuestionSample]:
+def load_questions(path: Path) -> list[QuestionSample]:
     data = json.loads(path.read_text(encoding="utf-8"))
-    samples: List[QuestionSample] = []
+    samples: list[QuestionSample] = []
     for idx, entry in enumerate(data, start=1):
         question = entry["question"]
         answer = entry["answer"]
@@ -132,7 +132,7 @@ def ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def summarize_results(results: Iterable[AdapterStepResult]) -> Dict[str, float]:
+def summarize_results(results: Iterable[AdapterStepResult]) -> dict[str, float]:
     scores = [
         step.environment_result.metrics.get("similarity", 0.0) for step in results
     ]
@@ -148,19 +148,19 @@ def truncate(text: str, limit: int = 120) -> str:
 
 def build_report(
     args: argparse.Namespace,
-    results: List[AdapterStepResult],
+    results: list[AdapterStepResult],
     skillbook: Skillbook,
 ) -> str:
     stats = summarize_results(results)
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
-    lines: List[str] = []
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%SZ")
+    lines: list[str] = []
     lines.append("# Questions Test Report")
     lines.append("")
     lines.append(f"- Generated: {timestamp}")
     lines.append(f"- Model: `{args.model_path}`")
     lines.append(f"- CUDA devices: `{args.cuda_visible_devices}`")
     lines.append(f"- Epochs: {args.epochs}")
-    lines.append(f"- Samples: {len(results) }")
+    lines.append(f"- Samples: {len(results)}")
     lines.append(
         f"- Similarity (avg/min/max): {stats['avg']:.2%} / "
         f"{stats['min']:.2%} / {stats['max']:.2%}"

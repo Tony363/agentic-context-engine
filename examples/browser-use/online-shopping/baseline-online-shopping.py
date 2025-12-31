@@ -2,7 +2,6 @@
 import asyncio
 import os
 import sys
-import json
 from datetime import datetime
 
 sys.path.append(
@@ -109,8 +108,8 @@ def print_results_summary(output_text):
     print("🛒 GROCERY PRICE COMPARISON RESULTS")
     print("=" * 80)
     print(f"📅 Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"🏪 Store: Migros (Test Run)")
-    print(f"📦 Items: 5 essential grocery items")
+    print("🏪 Store: Migros (Test Run)")
+    print("📦 Items: 5 essential grocery items")
 
     # Parse basket data from agent output
     stores_data = parse_basket_data(output_text)
@@ -139,7 +138,7 @@ def print_results_summary(output_text):
         ]
 
         if len(totals_available) >= 2:
-            print(f"\n🏆 PRICE COMPARISON:")
+            print("\n🏆 PRICE COMPARISON:")
             print("-" * 50)
             totals_available.sort(key=lambda x: x[1])
             winner = totals_available[0]
@@ -156,7 +155,7 @@ def print_results_summary(output_text):
                 f"\n⚠️ Only one store total found: {totals_available[0][0]} - CHF {totals_available[0][1]:.2f}"
             )
         else:
-            print(f"\n⚠️ Could not extract store totals for comparison")
+            print("\n⚠️ Could not extract store totals for comparison")
     else:
         print("\n⚠️ Could not parse basket data from output")
 
@@ -260,19 +259,41 @@ async def main():
 
     # Calculate accuracy
     correct_items = 0
-    if result['success'] and result['result_text']:
-        result_text = result['result_text']
+    if result["success"] and result["result_text"]:
+        result_text = result["result_text"]
         # Check for correct cheapest items
-        correct_items += 1 if "Valflora" in result_text and "1.40" in result_text else 0  # Milk
-        correct_items += 1 if "M-Budget" in result_text and "eggs" in result_text and "4.25" in result_text else 0  # Eggs
-        correct_items += 1 if "M-Budget" in result_text and ("Bananas" in result_text or "bananas" in result_text) and "1.20" in result_text else 0  # Bananas (must be M-Budget 1.20)
-        correct_items += 1 if "M-Classic" in result_text and "butter" in result_text and "7.80" in result_text else 0  # Butter (M-Classic 7.80)
-        correct_items += 1 if "Fleur de Pains" in result_text and "3.40" in result_text else 0  # Bread
+        correct_items += (
+            1 if "Valflora" in result_text and "1.40" in result_text else 0
+        )  # Milk
+        correct_items += (
+            1
+            if "M-Budget" in result_text
+            and "eggs" in result_text
+            and "4.25" in result_text
+            else 0
+        )  # Eggs
+        correct_items += (
+            1
+            if "M-Budget" in result_text
+            and ("Bananas" in result_text or "bananas" in result_text)
+            and "1.20" in result_text
+            else 0
+        )  # Bananas (must be M-Budget 1.20)
+        correct_items += (
+            1
+            if "M-Classic" in result_text
+            and "butter" in result_text
+            and "7.80" in result_text
+            else 0
+        )  # Butter (M-Classic 7.80)
+        correct_items += (
+            1 if "Fleur de Pains" in result_text and "3.40" in result_text else 0
+        )  # Bread
 
     accuracy_pct = (correct_items / 5) * 100
 
     # Print metrics summary
-    print(f"\n📊 PERFORMANCE METRICS:")
+    print("\n📊 PERFORMANCE METRICS:")
     print("=" * 50)
     print(f"🔄 Steps taken: {result['steps']}")
     print(f"🤖 Browser-use tokens: {result['browseruse_tokens']}")

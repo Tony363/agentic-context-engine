@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING
 
 from ..features import has_litellm, has_numpy, has_sentence_transformers
 from .config import DeduplicationConfig
@@ -17,11 +17,11 @@ logger = logging.getLogger(__name__)
 class SimilarityDetector:
     """Detect similar skill pairs using cosine similarity on embeddings."""
 
-    def __init__(self, config: Optional[DeduplicationConfig] = None):
+    def __init__(self, config: DeduplicationConfig | None = None):
         self.config = config or DeduplicationConfig()
         self._model = None  # Lazy load sentence-transformers model
 
-    def compute_embedding(self, text: str) -> Optional[List[float]]:
+    def compute_embedding(self, text: str) -> list[float] | None:
         """Compute embedding for a single text.
 
         Args:
@@ -35,7 +35,7 @@ class SimilarityDetector:
         else:
             return self._compute_embedding_sentence_transformers(text)
 
-    def compute_embeddings_batch(self, texts: List[str]) -> List[Optional[List[float]]]:
+    def compute_embeddings_batch(self, texts: list[str]) -> list[list[float] | None]:
         """Compute embeddings for multiple texts (more efficient).
 
         Args:
@@ -52,7 +52,7 @@ class SimilarityDetector:
         else:
             return self._compute_embeddings_batch_sentence_transformers(texts)
 
-    def _compute_embedding_litellm(self, text: str) -> Optional[List[float]]:
+    def _compute_embedding_litellm(self, text: str) -> list[float] | None:
         """Compute embedding using LiteLLM."""
         if not has_litellm():
             logger.warning("LiteLLM not available for embeddings")
@@ -71,8 +71,8 @@ class SimilarityDetector:
             return None
 
     def _compute_embeddings_batch_litellm(
-        self, texts: List[str]
-    ) -> List[Optional[List[float]]]:
+        self, texts: list[str]
+    ) -> list[list[float] | None]:
         """Batch compute embeddings using LiteLLM."""
         if not has_litellm():
             logger.warning("LiteLLM not available for embeddings")
@@ -92,7 +92,7 @@ class SimilarityDetector:
 
     def _compute_embedding_sentence_transformers(
         self, text: str
-    ) -> Optional[List[float]]:
+    ) -> list[float] | None:
         """Compute embedding using sentence-transformers (local)."""
         if not has_sentence_transformers():
             logger.warning("sentence-transformers not available for embeddings")
@@ -109,8 +109,8 @@ class SimilarityDetector:
             return None
 
     def _compute_embeddings_batch_sentence_transformers(
-        self, texts: List[str]
-    ) -> List[Optional[List[float]]]:
+        self, texts: list[str]
+    ) -> list[list[float] | None]:
         """Batch compute embeddings using sentence-transformers."""
         if not has_sentence_transformers():
             logger.warning("sentence-transformers not available for embeddings")
@@ -134,7 +134,7 @@ class SimilarityDetector:
             self._model = SentenceTransformer(self.config.local_model_name)
         return self._model
 
-    def cosine_similarity(self, a: List[float], b: List[float]) -> float:
+    def cosine_similarity(self, a: list[float], b: list[float]) -> float:
         """Compute cosine similarity between two embedding vectors.
 
         Args:
@@ -146,7 +146,7 @@ class SimilarityDetector:
         """
         if not has_numpy():
             # Fallback to pure Python
-            dot = sum(x * y for x, y in zip(a, b))
+            dot = sum(x * y for x, y in zip(a, b, strict=False))
             norm_a = sum(x * x for x in a) ** 0.5
             norm_b = sum(x * x for x in b) ** 0.5
             if norm_a == 0 or norm_b == 0:
@@ -164,7 +164,7 @@ class SimilarityDetector:
             return 0.0
         return float(dot / (norm_a * norm_b))
 
-    def ensure_embeddings(self, skillbook: "Skillbook") -> int:
+    def ensure_embeddings(self, skillbook: Skillbook) -> int:
         """Ensure all active skills have embeddings computed.
 
         Args:
@@ -184,7 +184,7 @@ class SimilarityDetector:
         embeddings = self.compute_embeddings_batch(texts)
 
         count = 0
-        for skill, embedding in zip(skills_needing_embeddings, embeddings):
+        for skill, embedding in zip(skills_needing_embeddings, embeddings, strict=False):
             if embedding is not None:
                 skill.embedding = embedding
                 count += 1
@@ -194,9 +194,9 @@ class SimilarityDetector:
 
     def detect_similar_pairs(
         self,
-        skillbook: "Skillbook",
-        threshold: Optional[float] = None,
-    ) -> List[Tuple["Skill", "Skill", float]]:
+        skillbook: Skillbook,
+        threshold: float | None = None,
+    ) -> list[tuple[Skill, Skill, float]]:
         """Find all pairs of skills with similarity >= threshold.
 
         Args:
@@ -208,7 +208,7 @@ class SimilarityDetector:
             sorted by similarity score descending
         """
         threshold = threshold or self.config.similarity_threshold
-        similar_pairs: List[Tuple["Skill", "Skill", float]] = []
+        similar_pairs: list[tuple[Skill, Skill, float]] = []
 
         # Get active skills only
         skills = skillbook.skills(include_invalid=False)
@@ -231,12 +231,12 @@ class SimilarityDetector:
 
     def _find_similar_in_list(
         self,
-        skills: List["Skill"],
-        skillbook: "Skillbook",
+        skills: list[Skill],
+        skillbook: Skillbook,
         threshold: float,
-    ) -> List[Tuple["Skill", "Skill", float]]:
+    ) -> list[tuple[Skill, Skill, float]]:
         """Find similar pairs within a list of skills."""
-        pairs: List[Tuple["Skill", "Skill", float]] = []
+        pairs: list[tuple[Skill, Skill, float]] = []
 
         for i, skill_a in enumerate(skills):
             if skill_a.embedding is None:

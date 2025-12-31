@@ -52,21 +52,21 @@ except ImportError:
 
 # Import browser-use integration if available
 try:
-    from .browser_use import ACEAgent, BROWSER_USE_AVAILABLE
+    from .browser_use import BROWSER_USE_AVAILABLE, ACEAgent
 except ImportError:
     ACEAgent = None  # type: ignore
     BROWSER_USE_AVAILABLE = False
 
 # Import LangChain integration if available
 try:
-    from .langchain import ACELangChain, LANGCHAIN_AVAILABLE
+    from .langchain import LANGCHAIN_AVAILABLE, ACELangChain
 except ImportError:
     ACELangChain = None  # type: ignore
     LANGCHAIN_AVAILABLE = False
 
 # Import Claude Code integration if available
 try:
-    from .claude_code import ACEClaudeCode, CLAUDE_CODE_AVAILABLE
+    from .claude_code import CLAUDE_CODE_AVAILABLE, ACEClaudeCode
 except ImportError:
     ACEClaudeCode = None  # type: ignore
     CLAUDE_CODE_AVAILABLE = False

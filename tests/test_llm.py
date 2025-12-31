@@ -4,7 +4,6 @@ import unittest
 from collections import deque
 
 import pytest
-
 from ace.llm import DummyLLMClient, LLMClient, LLMResponse
 
 

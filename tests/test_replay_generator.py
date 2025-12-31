@@ -1,8 +1,7 @@
 import unittest
 
 import pytest
-
-from ace import ReplayAgent, Skillbook, Sample
+from ace import ReplayAgent, Sample, Skillbook
 
 
 @pytest.mark.unit

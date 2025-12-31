@@ -63,13 +63,14 @@ Example (LangGraph agent):
     # ACE automatically extracts traces from message history for learning
 """
 
-from typing import TYPE_CHECKING, Any, Optional, Dict, Callable, List
 import asyncio
 import logging
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Optional
 
-from ..skillbook import Skillbook
-from ..roles import Reflector, SkillManager, AgentOutput
 from ..prompts_v2_1 import PromptManager
+from ..roles import AgentOutput, Reflector, SkillManager
+from ..skillbook import Skillbook
 from .base import wrap_skillbook_context
 
 if TYPE_CHECKING:
@@ -147,10 +148,10 @@ class ACELangChain:
         self,
         runnable: Any,
         ace_model: str = "gpt-4o-mini",
-        skillbook_path: Optional[str] = None,
+        skillbook_path: str | None = None,
         is_learning: bool = True,
         async_learning: bool = False,
-        output_parser: Optional[Callable[[Any], str]] = None,
+        output_parser: Callable[[Any], str] | None = None,
         dedup_config: Optional["DeduplicationConfig"] = None,
     ):
         """
@@ -207,7 +208,7 @@ class ACELangChain:
         self.runnable = runnable
         self.is_learning = is_learning
         self._async_learning = async_learning
-        self._learning_tasks: List[asyncio.Task] = []
+        self._learning_tasks: list[asyncio.Task] = []
         self._tasks_submitted_count: int = 0
         self._tasks_completed_count: int = 0
         self.output_parser = output_parser or self._default_output_parser
@@ -615,7 +616,7 @@ Note: This is an external LangChain chain execution that failed. Learning should
             logger.error(f"ACE failure learning failed: {e}")
             # Don't crash
 
-    def _learn_with_trace(self, original_input: Any, result: Dict[str, Any]):
+    def _learn_with_trace(self, original_input: Any, result: dict[str, Any]):
         """
         Learn from AgentExecutor result with intermediate_steps.
 
@@ -689,7 +690,7 @@ Note: This is an external LangChain chain execution that failed. Learning should
             logger.error(f"ACE learning with trace failed: {e}")
             # Don't crash - continue without learning
 
-    def _learn_with_langgraph_trace(self, original_input: Any, result: Dict[str, Any]):
+    def _learn_with_langgraph_trace(self, original_input: Any, result: dict[str, Any]):
         """
         Learn from LangGraph execution with message history.
 
@@ -764,7 +765,7 @@ Final Answer: {output}"""
         """
         await asyncio.to_thread(self._learn_from_failure, original_input, error_msg)
 
-    async def _alearn_with_trace(self, original_input: Any, result: Dict[str, Any]):
+    async def _alearn_with_trace(self, original_input: Any, result: dict[str, Any]):
         """
         Async version of _learn_with_trace for background execution.
 
@@ -774,7 +775,7 @@ Final Answer: {output}"""
         await asyncio.to_thread(self._learn_with_trace, original_input, result)
 
     async def _alearn_with_langgraph_trace(
-        self, original_input: Any, result: Dict[str, Any]
+        self, original_input: Any, result: dict[str, Any]
     ):
         """
         Async version of _learn_with_langgraph_trace for background execution.
@@ -790,7 +791,7 @@ Final Answer: {output}"""
         """Callback when a learning task completes (success or failure)."""
         self._tasks_completed_count += 1
 
-    async def wait_for_learning(self, timeout: Optional[float] = None) -> bool:
+    async def wait_for_learning(self, timeout: float | None = None) -> bool:
         """
         Wait for all background learning tasks to complete.
 
@@ -825,11 +826,11 @@ Final Answer: {output}"""
             )
             self._learning_tasks.clear()
             return True
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return False
 
     @property
-    def learning_stats(self) -> Dict[str, Any]:
+    def learning_stats(self) -> dict[str, Any]:
         """
         Get async learning statistics.
 
@@ -921,7 +922,7 @@ Final Answer: {output}"""
             return False
         return isinstance(self.runnable, CompiledStateGraph)
 
-    def _extract_langgraph_output(self, result: Dict[str, Any]) -> str:
+    def _extract_langgraph_output(self, result: dict[str, Any]) -> str:
         """
         Extract final answer from LangGraph message-based output.
 
@@ -944,8 +945,8 @@ Final Answer: {output}"""
         return ""
 
     def _extract_langgraph_trace(
-        self, result: Dict[str, Any]
-    ) -> tuple[str, List[tuple[Any, Any]]]:
+        self, result: dict[str, Any]
+    ) -> tuple[str, list[tuple[Any, Any]]]:
         """
         Extract reasoning trace and intermediate steps from LangGraph output.
 
@@ -960,7 +961,7 @@ Final Answer: {output}"""
         """
         messages = result.get("messages", [])
         parts = []
-        intermediate_steps: List[tuple[Any, Any]] = []
+        intermediate_steps: list[tuple[Any, Any]] = []
 
         for msg in messages:
             msg_type = getattr(msg, "type", msg.__class__.__name__.lower())

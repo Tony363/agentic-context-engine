@@ -26,24 +26,21 @@ If Opik is installed, you'll get automatic tracking of:
 """
 
 import os
-import sys
 from pathlib import Path
-from typing import Dict
-from dotenv import load_dotenv
-
 
 from ace import (
-    ReplayAgent,
-    Reflector,
-    SkillManager,
-    OfflineACE,
-    Sample,
-    TaskEnvironment,
     EnvironmentResult,
-    Skillbook,
     LiteLLMClient,
+    OfflineACE,
+    Reflector,
+    ReplayAgent,
+    Sample,
+    Skillbook,
+    SkillManager,
+    TaskEnvironment,
 )
 from ace.prompts_v2_1 import PromptManager
+from dotenv import load_dotenv
 from helicone_loader import HeliconeLoader
 
 # Load environment variables
@@ -92,7 +89,7 @@ class SimpleHeliconeEnvironment(TaskEnvironment):
         )
 
 
-def build_response_mapping(helicone_trace) -> Dict[str, str]:
+def build_response_mapping(helicone_trace) -> dict[str, str]:
     """
     Extract question→response mapping from a Helicone trace.
 
@@ -193,7 +190,7 @@ def main():
 
     if not json_path.exists():
         print(f"❌ File not found: {json_path}")
-        print(f"   Please place your Helicone JSON export at this location")
+        print("   Please place your Helicone JSON export at this location")
         return
 
     loader = HeliconeLoader(str(json_path))
@@ -225,8 +222,8 @@ def main():
         return
 
     # 4. Create ACE components
-    print(f"🧠 Initializing ACE components...")
-    print(f"   Agent: ReplayAgent (uses historical data)")
+    print("🧠 Initializing ACE components...")
+    print("   Agent: ReplayAgent (uses historical data)")
     print(f"   Reflector: {MODEL} (with v2 prompts)")
     print(f"   SkillManager: {MODEL} (with v2 prompts)\n")
 
@@ -250,7 +247,7 @@ def main():
     environment = SimpleHeliconeEnvironment()
 
     # 6. Run offline adaptation
-    print(f"🔄 Starting ACE offline training...")
+    print("🔄 Starting ACE offline training...")
     print(f"   Epochs: {EPOCHS}")
     print(f"   Samples per epoch: {len(samples)}\n")
 
@@ -273,7 +270,7 @@ def main():
 
     # Show top learned strategies
     if adapter.skillbook.skills():
-        print(f"\n🎯 Top Learned Strategies:")
+        print("\n🎯 Top Learned Strategies:")
         for i, skill in enumerate(adapter.skillbook.skills()[:5], 1):
             score = skill.helpful - skill.harmful
             print(f"\n{i}. {skill.content[:100]}...")
@@ -285,14 +282,14 @@ def main():
     print(f"\n💾 Skillbook saved to: {skillbook_path}")
 
     # 9. Show trace analytics
-    print(f"\n📊 Original Trace Analytics:")
+    print("\n📊 Original Trace Analytics:")
     print(f"   Cache effectiveness: {trace.get_cache_effectiveness():.1f}%")
     print(f"   Cost per token: ${trace.get_cost_per_token():.6f}")
     print(f"   Latency: {trace.delay_ms}ms")
 
     tool_stats = trace.get_tool_stats()
     if tool_stats:
-        print(f"\n🔧 Tool Usage:")
+        print("\n🔧 Tool Usage:")
         for tool, count in sorted(tool_stats.items(), key=lambda x: x[1], reverse=True):
             print(f"   {tool}: {count} calls")
 

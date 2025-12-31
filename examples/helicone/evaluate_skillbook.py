@@ -22,11 +22,10 @@ Output:
 import json
 import os
 import random
-import sys
 from pathlib import Path
-from typing import Dict, List, Any, Tuple, Optional
-from dotenv import load_dotenv
+from typing import Any
 
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv(override=True)
@@ -34,10 +33,10 @@ load_dotenv(override=True)
 # Disable Opik logging for cleaner output (must be set before importing ace)
 os.environ["OPIK_ENABLED"] = "false"
 
-from ace import Skillbook, LiteLLMClient
+from ace import LiteLLMClient, Skillbook
 
 
-def load_test_samples(jsonl_path: str, n_samples: int = 20) -> List[Dict[str, Any]]:
+def load_test_samples(jsonl_path: str, n_samples: int = 20) -> list[dict[str, Any]]:
     """
     Load last N samples from JSONL file as test set.
 
@@ -51,7 +50,7 @@ def load_test_samples(jsonl_path: str, n_samples: int = 20) -> List[Dict[str, An
     print(f"📂 Loading test set: last {n_samples} samples from {jsonl_path}")
 
     samples = []
-    with open(jsonl_path, "r", encoding="utf-8") as f:
+    with open(jsonl_path, encoding="utf-8") as f:
         for line in f:
             samples.append(json.loads(line))
 
@@ -62,7 +61,7 @@ def load_test_samples(jsonl_path: str, n_samples: int = 20) -> List[Dict[str, An
     return test_samples
 
 
-def extract_ground_truth(response_text: str) -> Dict[str, str]:
+def extract_ground_truth(response_text: str) -> dict[str, str]:
     """
     Extract buggy code, error message, and fixed code from response text.
 
@@ -111,7 +110,7 @@ def extract_ground_truth(response_text: str) -> Dict[str, str]:
     return result
 
 
-def filter_skillbook_skills(skillbook: Skillbook, categories: List[str]) -> str:
+def filter_skillbook_skills(skillbook: Skillbook, categories: list[str]) -> str:
     """
     Filter skillbook skills to only those matching sample categories.
 
@@ -154,7 +153,7 @@ def generate_responses(
     system_prompt: str,
     skillbook_text: str,
     model: str = "claude-sonnet-4-20250514",
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """
     Generate baseline and ACE responses.
 
@@ -182,9 +181,9 @@ def generate_responses(
 def judge_response(
     question: str,
     response: str,
-    ground_truth: Dict[str, str],
+    ground_truth: dict[str, str],
     judge_model: str = "claude-sonnet-4-5-20250929",
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Judge whether a response would lead to error (blinded evaluation).
 
@@ -277,7 +276,7 @@ UNCERTAIN = Cannot determine clearly"""
 
 
 def print_interim_summary(
-    results: List[Dict[str, Any]], total_attempted: int, skipped: int
+    results: list[dict[str, Any]], total_attempted: int, skipped: int
 ) -> None:
     """Print summary statistics for current results."""
     if not results:
@@ -306,8 +305,8 @@ def print_interim_summary(
 
 
 def evaluate_skillbook(
-    test_samples: List[Dict[str, Any]], skillbook: Skillbook, output_dir: Path
-) -> Dict[str, Any]:
+    test_samples: list[dict[str, Any]], skillbook: Skillbook, output_dir: Path
+) -> dict[str, Any]:
     """
     Run full evaluation: generate responses and judge them blindly.
 
@@ -384,15 +383,15 @@ def evaluate_skillbook(
         results.append(result)
 
         # Print results immediately
-        print(f"✓ Done")
+        print("✓ Done")
         print(f"\n  Question: {question[:150]}...")
-        print(f"\n  📝 Baseline Response:")
+        print("\n  📝 Baseline Response:")
         print(f"     {baseline_resp[:300]}...")
         print(f"     Verdict: {result['baseline_judgment']['verdict']}")
-        print(f"\n  🎯 ACE Response (with skillbook):")
+        print("\n  🎯 ACE Response (with skillbook):")
         print(f"     {ace_resp[:300]}...")
         print(f"     Verdict: {result['ace_judgment']['verdict']}")
-        print(f"\n" + "-" * 70 + "\n")
+        print("\n" + "-" * 70 + "\n")
 
         # Print interim summary every 10 samples
         if i % 10 == 0:
@@ -493,7 +492,7 @@ def main():
 
     if not skillbook_path.exists():
         print(f"❌ Skillbook not found: {skillbook_path}")
-        print(f"   Run convex_training.py first to train skillbook\n")
+        print("   Run convex_training.py first to train skillbook\n")
         return
 
     # Load test samples
@@ -514,13 +513,13 @@ def main():
 
     metrics = eval_results["metrics"]
 
-    print(f"\n**Overview:**")
+    print("\n**Overview:**")
     print(f"  Total samples attempted: {metrics['total_samples_attempted']}")
     print(f"  Successfully evaluated:  {metrics['samples_evaluated']}")
     if metrics["samples_skipped"] > 0:
         print(f"  Skipped (judge errors):  {metrics['samples_skipped']}")
 
-    print(f"\n**Performance Comparison:**")
+    print("\n**Performance Comparison:**")
     print(
         f"  Baseline (no skillbook): {metrics['baseline']['success']}/{metrics['samples_evaluated']} SUCCESS ({metrics['baseline']['success_rate']:.1f}%)"
     )
@@ -528,14 +527,14 @@ def main():
         f"  ACE (with skillbook):    {metrics['ace']['success']}/{metrics['samples_evaluated']} SUCCESS ({metrics['ace']['success_rate']:.1f}%)"
     )
 
-    print(f"\n**Improvement:**")
+    print("\n**Improvement:**")
     print(f"  Success rate delta: {metrics['improvement']['success_rate_delta']:+.1f}%")
     print(
         f"  Additional successes: {metrics['improvement']['success_gain']:+d} samples"
     )
     print(f"  Failures reduced: {metrics['improvement']['fail_reduction']:+d} samples")
 
-    print(f"\n**Detailed Breakdown:**")
+    print("\n**Detailed Breakdown:**")
     print(
         f"  Baseline - Success: {metrics['baseline']['success']}, Fail: {metrics['baseline']['fail']}, Uncertain: {metrics['baseline']['uncertain']}"
     )
@@ -543,7 +542,7 @@ def main():
         f"  ACE      - Success: {metrics['ace']['success']}, Fail: {metrics['ace']['fail']}, Uncertain: {metrics['ace']['uncertain']}"
     )
 
-    print(f"\n💾 Detailed results saved to:")
+    print("\n💾 Detailed results saved to:")
     print(f"   {output_dir}/evaluation_results.json")
     print(f"   {output_dir}/evaluation_summary.json")
 

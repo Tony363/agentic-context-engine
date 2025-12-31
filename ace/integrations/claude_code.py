@@ -24,20 +24,20 @@ Example:
     )
 """
 
-import subprocess
-import shutil
 import json
 import os
 import queue
+import shutil
+import subprocess
 import threading
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 from dataclasses import dataclass
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Optional
 
 from ..llm_providers import LiteLLMClient
-from ..skillbook import Skillbook
-from ..roles import Reflector, SkillManager, AgentOutput
 from ..prompts_v2_1 import PromptManager
+from ..roles import AgentOutput, Reflector, SkillManager
+from ..skillbook import Skillbook
 from .base import wrap_skillbook_context
 
 if TYPE_CHECKING:
@@ -56,7 +56,7 @@ class ClaudeCodeResult:
     output: str
     execution_trace: str
     returncode: int
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class ACEClaudeCode:
@@ -92,10 +92,10 @@ class ACEClaudeCode:
         self,
         working_dir: str,
         ace_model: str = "gpt-4o-mini",
-        ace_llm: Optional[LiteLLMClient] = None,
+        ace_llm: LiteLLMClient | None = None,
         ace_max_tokens: int = 2048,
-        skillbook: Optional[Skillbook] = None,
-        skillbook_path: Optional[str] = None,
+        skillbook: Skillbook | None = None,
+        skillbook_path: str | None = None,
         is_learning: bool = True,
         timeout: int = 600,
         async_learning: bool = False,
@@ -120,7 +120,7 @@ class ACEClaudeCode:
         """
         if not CLAUDE_CODE_AVAILABLE:
             raise RuntimeError(
-                "Claude Code CLI not found. Install from: " "https://claude.ai/code"
+                "Claude Code CLI not found. Install from: https://claude.ai/code"
             )
 
         self.working_dir = Path(working_dir).resolve()
@@ -154,7 +154,7 @@ class ACEClaudeCode:
         )
 
         # Initialize deduplication manager if config provided
-        self._dedup_manager: Optional["DeduplicationManager"] = None
+        self._dedup_manager: DeduplicationManager | None = None
         if dedup_config:
             from ..deduplication import DeduplicationManager
 
@@ -162,7 +162,7 @@ class ACEClaudeCode:
 
         # Async learning state
         self._learning_queue: queue.Queue = queue.Queue()
-        self._learning_thread: Optional[threading.Thread] = None
+        self._learning_thread: threading.Thread | None = None
         self._stop_learning = threading.Event()
         self._tasks_submitted = 0
         self._tasks_completed = 0
@@ -259,7 +259,7 @@ class ACEClaudeCode:
                 error=str(e),
             )
 
-    def _parse_stream_json(self, stdout: str) -> Tuple[str, str]:
+    def _parse_stream_json(self, stdout: str) -> tuple[str, str]:
         """
         Parse stream-json output from Claude Code.
 
@@ -429,7 +429,7 @@ class ACEClaudeCode:
                     self._tasks_completed += 1
                 self._learning_queue.task_done()
 
-    def wait_for_learning(self, timeout: Optional[float] = None) -> bool:
+    def wait_for_learning(self, timeout: float | None = None) -> bool:
         """
         Wait for async learning to complete.
 
@@ -487,7 +487,7 @@ class ACEClaudeCode:
             self._learning_thread.join(timeout=5.0)
 
     @property
-    def learning_stats(self) -> Dict[str, Any]:
+    def learning_stats(self) -> dict[str, Any]:
         """
         Get async learning statistics.
 

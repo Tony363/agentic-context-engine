@@ -8,7 +8,8 @@ properly structured samples for evaluation.
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Dict, List, Iterator, Any, Tuple
+from collections.abc import Iterator
+from typing import Any
 
 from ace import Sample
 
@@ -33,7 +34,7 @@ class FiNERProcessor:
         }
 
     def process_token_stream(
-        self, token_stream: Iterator[Dict[str, Any]]
+        self, token_stream: Iterator[dict[str, Any]]
     ) -> Iterator[Sample]:
         """
         Process token stream and yield sentence-level samples.
@@ -79,7 +80,7 @@ class FiNERProcessor:
 
                 sample_id += 1
 
-    def _reconstruct_sentence(self, tokens: List[str]) -> str:
+    def _reconstruct_sentence(self, tokens: list[str]) -> str:
         """
         Reconstruct sentence from tokens, handling punctuation properly.
         """
@@ -101,8 +102,8 @@ class FiNERProcessor:
         return token in punctuation
 
     def _extract_entities(
-        self, tokens: List[str], labels: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, tokens: list[str], labels: list[str]
+    ) -> list[dict[str, Any]]:
         """
         Convert BIO labels to entity spans.
 
@@ -116,7 +117,7 @@ class FiNERProcessor:
         entities = []
         current_entity = None
 
-        for i, (token, label) in enumerate(zip(tokens, labels)):
+        for i, (token, label) in enumerate(zip(tokens, labels, strict=False)):
             if label.startswith("B-"):
                 # Save previous entity if exists
                 if current_entity:
@@ -160,8 +161,8 @@ class FiNERProcessor:
         return entities
 
     def _finalize_entity(
-        self, entity_info: Dict[str, Any], tokens: List[str]
-    ) -> Dict[str, Any]:
+        self, entity_info: dict[str, Any], tokens: list[str]
+    ) -> dict[str, Any]:
         """Convert entity info to final entity dictionary."""
         entity_tokens = [tokens[i] for i in entity_info["token_indices"]]
         entity_text = self._reconstruct_entity_text(entity_tokens)
@@ -174,7 +175,7 @@ class FiNERProcessor:
             "tokens": entity_tokens,
         }
 
-    def _reconstruct_entity_text(self, entity_tokens: List[str]) -> str:
+    def _reconstruct_entity_text(self, entity_tokens: list[str]) -> str:
         """Reconstruct entity text from tokens."""
         if not entity_tokens:
             return ""
@@ -188,7 +189,7 @@ class FiNERProcessor:
 
         return "".join(result)
 
-    def _format_entities_as_string(self, entities: List[Dict[str, Any]]) -> str:
+    def _format_entities_as_string(self, entities: list[dict[str, Any]]) -> str:
         """Format entities as string for ground truth comparison."""
         if not entities:
             return "No named entities found."
@@ -204,7 +205,7 @@ class XBRLMathProcessor:
     """Processor for XBRL-Math dataset - handles numerical reasoning problems."""
 
     def process_samples(
-        self, sample_stream: Iterator[Dict[str, Any]]
+        self, sample_stream: Iterator[dict[str, Any]]
     ) -> Iterator[Sample]:
         """Process XBRL-Math samples - may need restructuring based on actual format."""
         sample_id = 0
@@ -221,7 +222,7 @@ class XBRLMathProcessor:
 class AppWorldProcessor:
     """Processor for AppWorld dataset - handles agent tasks."""
 
-    def process_tasks(self, task_stream: Iterator[Dict[str, Any]]) -> Iterator[Sample]:
+    def process_tasks(self, task_stream: Iterator[dict[str, Any]]) -> Iterator[Sample]:
         """Process AppWorld tasks."""
         for task_data in task_stream:
             yield Sample(

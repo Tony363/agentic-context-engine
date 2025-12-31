@@ -9,29 +9,27 @@ This demonstrates:
 - Prompt output validation
 """
 
-import os
 import json
-from dotenv import load_dotenv
+import os
 
 from ace import (
-    LiteLLMClient,
     Agent,
-    Reflector,
-    SkillManager,
+    EnvironmentResult,
+    LiteLLMClient,
     OfflineACE,
     OnlineACE,
+    Reflector,
     Sample,
-    TaskEnvironment,
-    EnvironmentResult,
     Skillbook,
+    SkillManager,
+    TaskEnvironment,
 )
 from ace.prompts_v2_1 import (
+    AGENT_V2_1_PROMPT,
     PromptManager,
     validate_prompt_output,
-    AGENT_V2_1_PROMPT,
-    AGENT_MATH_PROMPT,
-    AGENT_CODE_PROMPT,
 )
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -268,7 +266,7 @@ def demo_online_learning_with_v2():
     results = adapter.run(test_samples, environment)
 
     # Display results for each sample
-    for i, (sample, result) in enumerate(zip(test_samples, results), 1):
+    for i, (sample, result) in enumerate(zip(test_samples, results, strict=False), 1):
         print(f"\n--- Sample {i}: {sample.question}")
         print(f"Answer: {result.agent_output.final_answer}")
         print(f"Feedback: {result.environment_result.feedback}")

@@ -1,6 +1,5 @@
 """Tests for ace.integrations.base module."""
 
-import pytest
 from ace import Skillbook
 from ace.integrations.base import wrap_skillbook_context
 

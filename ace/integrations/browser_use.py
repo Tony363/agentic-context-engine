@@ -20,8 +20,8 @@ Example:
 """
 
 import asyncio
-from typing import TYPE_CHECKING, Optional, Any, Callable, Dict, List
-from pathlib import Path
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Optional
 
 try:
     from browser_use import Agent, Browser
@@ -33,9 +33,9 @@ except ImportError:
     Browser = None  # type: ignore[misc,assignment]
 
 from ..llm_providers import LiteLLMClient
-from ..skillbook import Skillbook
-from ..roles import Reflector, SkillManager, AgentOutput
 from ..prompts_v2_1 import PromptManager
+from ..roles import AgentOutput, Reflector, SkillManager
+from ..skillbook import Skillbook
 from .base import wrap_skillbook_context
 
 if TYPE_CHECKING:
@@ -93,14 +93,14 @@ class ACEAgent:
 
     def __init__(
         self,
-        task: Optional[str] = None,
+        task: str | None = None,
         llm: Any = None,
-        browser: Optional[Any] = None,
+        browser: Any | None = None,
         ace_model: str = "gpt-4o-mini",
-        ace_llm: Optional[LiteLLMClient] = None,
+        ace_llm: LiteLLMClient | None = None,
         ace_max_tokens: int = 2048,
-        skillbook: Optional[Skillbook] = None,
-        skillbook_path: Optional[str] = None,
+        skillbook: Skillbook | None = None,
+        skillbook_path: str | None = None,
         is_learning: bool = True,
         async_learning: bool = False,
         dedup_config: Optional["DeduplicationConfig"] = None,
@@ -142,7 +142,7 @@ class ACEAgent:
         self.agent_kwargs = agent_kwargs
 
         # Async learning task tracking
-        self._learning_tasks: List[asyncio.Task] = []
+        self._learning_tasks: list[asyncio.Task] = []
 
         # Always create skillbook and ACE components
         # (but only use them if is_learning=True)
@@ -181,10 +181,10 @@ class ACEAgent:
 
     async def run(
         self,
-        task: Optional[str] = None,
-        max_steps: Optional[int] = None,
-        on_step_start: Optional[Callable] = None,
-        on_step_end: Optional[Callable] = None,
+        task: str | None = None,
+        max_steps: int | None = None,
+        on_step_start: Callable | None = None,
+        on_step_end: Callable | None = None,
         **run_kwargs,
     ):
         """
@@ -280,7 +280,7 @@ class ACEAgent:
             raise
 
     def _build_rich_feedback(
-        self, history: Any, success: bool, error: Optional[str] = None
+        self, history: Any, success: bool, error: str | None = None
     ) -> dict:
         """
         Extract comprehensive trace information from browser-use history.
@@ -450,7 +450,7 @@ class ACEAgent:
             "output": output,
         }
 
-    def _extract_cited_ids_from_history(self, history: Any) -> List[str]:
+    def _extract_cited_ids_from_history(self, history: Any) -> list[str]:
         """
         Extract cited skill IDs from browser-use agent thoughts.
 
@@ -482,7 +482,7 @@ class ACEAgent:
             return []
 
     async def _learn_from_execution(
-        self, task: str, history: Any, success: bool, error: Optional[str] = None
+        self, task: str, history: Any, success: bool, error: str | None = None
     ):
         """
         Run ACE learning pipeline AFTER browser execution.
@@ -521,11 +521,11 @@ class ACEAgent:
     def _sync_learn(
         self,
         task: str,
-        trace_info: Dict[str, Any],
-        valid_cited_ids: List[str],
-        cited_ids: List[str],
+        trace_info: dict[str, Any],
+        valid_cited_ids: list[str],
+        cited_ids: list[str],
         success: bool,
-        error: Optional[str],
+        error: str | None,
     ):
         """
         Synchronous learning logic (runs in thread pool).
@@ -598,7 +598,7 @@ class ACEAgent:
     # Async Learning Control
     # -----------------------------------------------------------------------
 
-    async def wait_for_learning(self, timeout: Optional[float] = None) -> bool:
+    async def wait_for_learning(self, timeout: float | None = None) -> bool:
         """Wait for all background learning tasks to complete.
 
         Args:
@@ -623,11 +623,11 @@ class ACEAgent:
             )
             self._learning_tasks.clear()
             return True
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return False
 
     @property
-    def learning_stats(self) -> Dict[str, Any]:
+    def learning_stats(self) -> dict[str, Any]:
         """Get learning progress statistics.
 
         Returns:

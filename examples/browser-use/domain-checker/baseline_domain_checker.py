@@ -7,16 +7,14 @@ Compare this with ace_domain_checker.py to see ACE's value.
 """
 
 import asyncio
-from pathlib import Path
-from typing import List
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from browser_use import Agent, Browser, ChatBrowserUse
-
 # Import common utilities from parent directory
-import sys
+
+from browser_use import Agent, Browser, ChatBrowserUse
 
 
 # Utility function for timeout calculation
@@ -27,9 +25,8 @@ def calculate_timeout_steps(timeout_seconds: float) -> int:
 
 # Import domain-specific utilities from local module
 from domain_utils import (
-    get_test_domains,
-    parse_domain_checker_output,
     DOMAIN_CHECKER_TEMPLATE,
+    get_test_domains,
 )
 
 
@@ -171,7 +168,7 @@ async def check_domain(domain: str, headless: bool = True):
             # Store error for potential retry
             last_error = f"Failed to get valid result: {output}"
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # Calculate additional steps for timeout duration
             timeout_duration = 180.0  # The timeout value used in wait_for()
             timeout_steps = calculate_timeout_steps(timeout_duration)
@@ -200,7 +197,6 @@ async def check_domain(domain: str, headless: bool = True):
             last_error = f"Timeout on attempt {attempt + 1}"
 
         except Exception as e:
-
             # Get actual steps even on error
             try:
                 if history and hasattr(history, "number_of_steps"):
@@ -333,7 +329,7 @@ def main():
         if attempt > 1:
             step_info += f" total ({', '.join(attempt_details)})"
         else:
-            step_info += f" (1 attempt)"
+            step_info += " (1 attempt)"
 
         correct = result.get("correct", False)
         accuracy_indicator = "✓" if correct else "✗"
@@ -395,10 +391,10 @@ def main():
     print("📈 SUMMARY")
     print("=" * 80)
     print(
-        f"✅ Success rate:          {successful:>2}/{len(results)} ({100*successful/len(results):>5.1f}%)"
+        f"✅ Success rate:          {successful:>2}/{len(results)} ({100 * successful / len(results):>5.1f}%)"
     )
     print(
-        f"🎯 Accuracy rate:         {correct:>2}/{len(results)} ({100*correct/len(results):>5.1f}%)"
+        f"🎯 Accuracy rate:         {correct:>2}/{len(results)} ({100 * correct / len(results):>5.1f}%)"
     )
     print(f"🔄 Domains w/ retries:    {domains_with_retries:>2}/{len(results)}")
     print(f"🔢 Total attempts:        {total_attempts:>6}")

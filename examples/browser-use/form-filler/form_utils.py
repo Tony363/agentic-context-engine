@@ -5,10 +5,9 @@ Form-filler specific utilities.
 Functions specific to form filling examples.
 """
 
-from typing import List, Dict
 
 
-def get_test_forms() -> List[Dict]:
+def get_test_forms() -> list[dict]:
     """
     Get list of test forms to fill.
 

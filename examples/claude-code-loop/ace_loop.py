@@ -17,9 +17,9 @@ Usage:
 import os
 import subprocess
 from pathlib import Path
-from dotenv import load_dotenv
 
 from ace.integrations import ACEClaudeCode
+from dotenv import load_dotenv
 
 # Load ACE loop config from .env.ace (not workspace .env)
 load_dotenv(Path(__file__).parent / ".env.ace")
@@ -193,7 +193,7 @@ def main():
 
     skills = list(agent.skillbook.skills())
     if skills:
-        print(f"\n Top Strategies:")
+        print("\n Top Strategies:")
         sorted_skills = sorted(
             skills, key=lambda s: s.helpful - s.harmful, reverse=True
         )

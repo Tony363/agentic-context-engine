@@ -11,17 +11,16 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 import pytest
-
 from ace import (
-    SkillManager,
-    EnvironmentResult,
     Agent,
+    EnvironmentResult,
     LLMClient,
     OfflineACE,
     OnlineACE,
-    Skillbook,
     Reflector,
     Sample,
+    Skillbook,
+    SkillManager,
     TaskEnvironment,
 )
 from ace.llm import LLMResponse
@@ -79,8 +78,8 @@ class MockLLMClient(LLMClient):
 
     def complete_structured(self, prompt: str, response_model, **kwargs):
         """Mock structured output to prevent Instructor wrapping."""
-        from ace.updates import UpdateBatch
         from ace.roles import SkillManagerOutput
+        from ace.updates import UpdateBatch
 
         response = self.complete(prompt, **kwargs)
         data = json.loads(response.text)

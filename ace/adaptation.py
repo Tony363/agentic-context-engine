@@ -5,16 +5,11 @@ from __future__ import annotations
 import json
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
 )
 
 if TYPE_CHECKING:
@@ -22,15 +17,15 @@ if TYPE_CHECKING:
     from .deduplication import DeduplicationConfig
     from .observability.opik_integration import OpikIntegration
 
-from .skillbook import Skillbook
 from .roles import (
-    SkillManager,
-    SkillManagerOutput,
     Agent,
     AgentOutput,
     Reflector,
     ReflectorOutput,
+    SkillManager,
+    SkillManagerOutput,
 )
+from .skillbook import Skillbook
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +36,8 @@ class Sample:
 
     question: str
     context: str = ""
-    ground_truth: Optional[str] = None
-    metadata: Dict[str, object] = field(default_factory=dict)
+    ground_truth: str | None = None
+    metadata: dict[str, object] = field(default_factory=dict)
 
 
 @dataclass
@@ -50,8 +45,8 @@ class EnvironmentResult:
     """Feedback returned by the task environment after executing the generator output."""
 
     feedback: str
-    ground_truth: Optional[str]
-    metrics: Dict[str, float] = field(default_factory=dict)
+    ground_truth: str | None
+    metrics: dict[str, float] = field(default_factory=dict)
 
 
 class TaskEnvironment(ABC):
@@ -149,10 +144,8 @@ class ACEStepResult:
     sample: Sample
     agent_output: AgentOutput
     environment_result: EnvironmentResult
-    reflection: Optional[ReflectorOutput]  # None in async mode until processed
-    skill_manager_output: Optional[
-        SkillManagerOutput
-    ]  # None in async mode until processed
+    reflection: ReflectorOutput | None  # None in async mode until processed
+    skill_manager_output: SkillManagerOutput | None  # None in async mode until processed
     skillbook_snapshot: str
 
     # Observability metadata
@@ -167,7 +160,7 @@ class ACEBase:
     def __init__(
         self,
         *,
-        skillbook: Optional[Skillbook] = None,
+        skillbook: Skillbook | None = None,
         agent: Agent,
         reflector: Reflector,
         skill_manager: SkillManager,
@@ -177,10 +170,10 @@ class ACEBase:
         # Async learning parameters
         async_learning: bool = False,
         max_reflector_workers: int = 3,
-        on_learning_error: Optional[Callable[[Exception, Any], None]] = None,
-        on_learning_complete: Optional[Callable[[Any, Any], None]] = None,
+        on_learning_error: Callable[[Exception, Any], None] | None = None,
+        on_learning_complete: Callable[[Any, Any], None] | None = None,
         # Deduplication
-        dedup_config: Optional["DeduplicationConfig"] = None,
+        dedup_config: DeduplicationConfig | None = None,
     ) -> None:
         self.skillbook = skillbook or Skillbook()
         self.agent = agent
@@ -188,14 +181,14 @@ class ACEBase:
         self.skill_manager = skill_manager
         self.max_refinement_rounds = max_refinement_rounds
         self.reflection_window = reflection_window
-        self._recent_reflections: List[str] = []
+        self._recent_reflections: list[str] = []
 
         # Async learning configuration
         self._async_learning = async_learning
         self._max_reflector_workers = max_reflector_workers
         self._on_learning_error = on_learning_error
         self._on_learning_complete = on_learning_complete
-        self._async_pipeline: Optional[AsyncLearningPipeline] = None
+        self._async_pipeline: AsyncLearningPipeline | None = None
 
         # Set up deduplication if config provided and skill_manager doesn't have one
         if dedup_config is not None and skill_manager.dedup_manager is None:
@@ -208,7 +201,7 @@ class ACEBase:
 
         # Observability integration
         self.enable_observability = enable_observability
-        self.opik_integration: Optional[OpikIntegration] = None
+        self.opik_integration: OpikIntegration | None = None
         if enable_observability:
             try:
                 from .observability import get_integration
@@ -282,7 +275,7 @@ class ACEBase:
             # Log observability errors in debug mode but don't interrupt main flow
             logger.debug(f"Opik observability error (non-critical): {e}")
 
-    def get_observability_data(self) -> Dict[str, Any]:
+    def get_observability_data(self) -> dict[str, Any]:
         """Get observability data (if available through Opik integration)."""
         if not self.enable_observability or not self.opik_integration:
             return {}
@@ -341,7 +334,7 @@ class ACEBase:
         remaining = self._async_pipeline.stop(wait=wait, timeout=timeout)
         return remaining
 
-    def wait_for_learning(self, timeout: Optional[float] = None) -> bool:
+    def wait_for_learning(self, timeout: float | None = None) -> bool:
         """Wait for all pending learning tasks to complete.
 
         Args:
@@ -356,7 +349,7 @@ class ACEBase:
         return self._async_pipeline.wait_for_completion(timeout=timeout)
 
     @property
-    def learning_stats(self) -> Dict[str, Any]:
+    def learning_stats(self) -> dict[str, Any]:
         """Get async learning statistics.
 
         Returns:
@@ -606,10 +599,10 @@ class OfflineACE(ACEBase):
         samples: Sequence[Sample],
         environment: TaskEnvironment,
         epochs: int = 1,
-        checkpoint_interval: Optional[int] = None,
-        checkpoint_dir: Optional[str] = None,
+        checkpoint_interval: int | None = None,
+        checkpoint_dir: str | None = None,
         wait_for_learning: bool = True,
-    ) -> List[ACEStepResult]:
+    ) -> list[ACEStepResult]:
         """
         Run offline adaptation over training samples.
 
@@ -634,10 +627,10 @@ class OfflineACE(ACEBase):
         """
         from pathlib import Path
 
-        results: List[ACEStepResult] = []
-        failed_samples: List[tuple] = (
-            []
-        )  # Track (epoch, step_idx, error) for failed samples
+        results: list[ACEStepResult] = []
+        failed_samples: list[
+            tuple
+        ] = []  # Track (epoch, step_idx, error) for failed samples
         total_steps = len(samples)
 
         # Validate checkpoint parameters
@@ -788,7 +781,7 @@ class OnlineACE(ACEBase):
         samples: Iterable[Sample],
         environment: TaskEnvironment,
         wait_for_learning: bool = True,
-    ) -> List[ACEStepResult]:
+    ) -> list[ACEStepResult]:
         """
         Run online adaptation over a stream of samples.
 
@@ -813,7 +806,7 @@ class OnlineACE(ACEBase):
             self.start_async_learning()
 
         try:
-            results: List[ACEStepResult] = []
+            results: list[ACEStepResult] = []
             step_idx = 0
             for step_idx, sample in enumerate(samples, start=1):
                 # Use async or sync processing based on mode

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import json
+from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Deque, Dict, Optional, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import BaseModel
 
@@ -21,13 +21,13 @@ class LLMResponse:
     """Container for LLM outputs."""
 
     text: str
-    raw: Optional[Dict[str, Any]] = None
+    raw: dict[str, Any] | None = None
 
 
 class LLMClient(ABC):
     """Abstract interface so ACE can plug into any chat/completions API."""
 
-    def __init__(self, model: Optional[str] = None) -> None:
+    def __init__(self, model: str | None = None) -> None:
         self.model = model
 
     @abstractmethod
@@ -41,9 +41,9 @@ class DummyLLMClient(LLMClient):
     Includes complete_structured() to prevent auto-wrapping with Instructor.
     """
 
-    def __init__(self, responses: Optional[Deque[str]] = None) -> None:
+    def __init__(self, responses: deque[str] | None = None) -> None:
         super().__init__(model="dummy")
-        self._responses: Deque[str] = responses or deque()
+        self._responses: deque[str] = responses or deque()
 
     def queue(self, text: str) -> None:
         """Enqueue a response to be used on the next completion call."""
@@ -57,7 +57,7 @@ class DummyLLMClient(LLMClient):
     def complete_structured(
         self,
         prompt: str,
-        response_model: Type[T],
+        response_model: type[T],
         **kwargs: Any,
     ) -> T:
         """Mock structured output - parses JSON and validates with Pydantic.
@@ -84,11 +84,11 @@ class TransformersLLMClient(LLMClient):
         max_new_tokens: int = 512,
         temperature: float = 0.0,
         top_p: float = 0.9,
-        device_map: Union[str, Dict[str, int]] = "auto",
-        torch_dtype: Union[str, "torch.dtype"] = "auto",
+        device_map: str | dict[str, int] = "auto",
+        torch_dtype: str | torch.dtype = "auto",
         trust_remote_code: bool = True,
-        system_prompt: Optional[str] = None,
-        generation_kwargs: Optional[Dict[str, Any]] = None,
+        system_prompt: str | None = None,
+        generation_kwargs: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(model=model_path)
 
@@ -111,7 +111,7 @@ class TransformersLLMClient(LLMClient):
             "Reasoning: low\n"
             "Do not expose analysis or chain-of-thought. Respond using the final JSON only."
         )
-        self._defaults: Dict[str, Any] = {
+        self._defaults: dict[str, Any] = {
             "max_new_tokens": max_new_tokens,
             "temperature": temperature,
             "top_p": top_p,

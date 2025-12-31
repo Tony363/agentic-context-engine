@@ -2,17 +2,13 @@
 
 import unittest
 from pathlib import Path
-import tempfile
 
 import pytest
-
-from ace import Agent, Reflector, SkillManager, Skillbook
+from ace import Agent, Reflector, Skillbook, SkillManager
 from ace.roles import (
-    _safe_json_loads,
     AgentOutput,
     ReflectorOutput,
-    SkillManagerOutput,
-    SkillTag,
+    _safe_json_loads,
 )
 
 

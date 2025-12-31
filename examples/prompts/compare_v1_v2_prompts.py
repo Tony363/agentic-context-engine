@@ -6,28 +6,27 @@ This script runs the same tasks through both prompt versions and
 compares accuracy, compliance, token usage, and output quality.
 """
 
-import os
 import json
+import os
 import time
-from dotenv import load_dotenv
-from typing import Dict, Any, List
 
 from ace import (
-    LiteLLMClient,
     Agent,
-    Reflector,
-    SkillManager,
-    OfflineACE,
-    Sample,
-    TaskEnvironment,
     EnvironmentResult,
+    LiteLLMClient,
+    OfflineACE,
+    Reflector,
+    Sample,
     Skillbook,
+    SkillManager,
+    TaskEnvironment,
 )
 from ace.prompts import AGENT_PROMPT, REFLECTOR_PROMPT, SKILL_MANAGER_PROMPT
 from ace.prompts_v2_1 import (
     PromptManager,
     validate_prompt_output,
 )
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -186,7 +185,7 @@ def print_comparison_results(v1_metrics, v2_metrics):
     v1_accuracy = v1_metrics["correct"] / v1_metrics["total"] * 100
     v2_accuracy = v2_metrics["correct"] / v2_metrics["total"] * 100
 
-    print(f"\n📊 ACCURACY")
+    print("\n📊 ACCURACY")
     print(f"  v1: {v1_accuracy:.1f}% ({v1_metrics['correct']}/{v1_metrics['total']})")
     print(f"  v2: {v2_accuracy:.1f}% ({v2_metrics['correct']}/{v2_metrics['total']})")
     if v2_accuracy > v1_accuracy:
@@ -194,10 +193,10 @@ def print_comparison_results(v1_metrics, v2_metrics):
     elif v1_accuracy > v2_accuracy:
         print(f"  ⚠️  v1 is {v1_accuracy - v2_accuracy:.1f}% more accurate")
     else:
-        print(f"  🔄 Same accuracy")
+        print("  🔄 Same accuracy")
 
     # Reasoning quality
-    print(f"\n💭 REASONING QUALITY")
+    print("\n💭 REASONING QUALITY")
     print(f"  v1 avg length: {v1_metrics.get('avg_reasoning_length', 0):.0f} chars")
     print(f"  v2 avg length: {v2_metrics.get('avg_reasoning_length', 0):.0f} chars")
     if v2_metrics.get("avg_reasoning_length", 0) > v1_metrics.get(
@@ -210,14 +209,14 @@ def print_comparison_results(v1_metrics, v2_metrics):
         print(f"  ✅ v2 reasoning is {improvement:.0f}% more detailed")
 
     # Skill citations
-    print(f"\n📌 STRATEGY USAGE")
+    print("\n📌 STRATEGY USAGE")
     print(f"  v1 avg skills cited: {v1_metrics.get('avg_skills_cited', 0):.1f}")
     print(f"  v2 avg skills cited: {v2_metrics.get('avg_skills_cited', 0):.1f}")
     print(f"  v1 skillbook size: {v1_metrics['skillbook_size']}")
     print(f"  v2 skillbook size: {v2_metrics['skillbook_size']}")
 
     # v2-specific features
-    print(f"\n🆕 V2-SPECIFIC FEATURES")
+    print("\n🆕 V2-SPECIFIC FEATURES")
     print(
         f"  Confidence scores: {v2_metrics.get('has_confidence', 0)}/{v2_metrics['total']} samples"
     )
@@ -228,7 +227,7 @@ def print_comparison_results(v1_metrics, v2_metrics):
     )
 
     # JSON compliance
-    print(f"\n✓ OUTPUT COMPLIANCE")
+    print("\n✓ OUTPUT COMPLIANCE")
     print(f"  v1 JSON valid: {v1_metrics.get('json_valid', False)}")
     print(f"  v2 JSON valid: {v2_metrics.get('json_valid', False)}")
     if v1_metrics.get("validation_errors"):
@@ -237,7 +236,7 @@ def print_comparison_results(v1_metrics, v2_metrics):
         print(f"  v2 errors: {v2_metrics['validation_errors']}")
 
     # Performance
-    print(f"\n⚡ PERFORMANCE")
+    print("\n⚡ PERFORMANCE")
     print(f"  v1 time: {v1_metrics['elapsed_time']:.1f}s")
     print(f"  v2 time: {v2_metrics['elapsed_time']:.1f}s")
     if v2_metrics["elapsed_time"] < v1_metrics["elapsed_time"]:
@@ -250,7 +249,7 @@ def print_comparison_results(v1_metrics, v2_metrics):
         )
 
     # Overall assessment
-    print(f"\n📈 OVERALL ASSESSMENT")
+    print("\n📈 OVERALL ASSESSMENT")
     v2_wins = 0
     v1_wins = 0
 
@@ -279,7 +278,7 @@ def print_comparison_results(v1_metrics, v2_metrics):
     elif v1_wins > v2_wins:
         print(f"  ℹ️  v1 prompts perform better ({v1_wins} wins vs {v2_wins})")
     else:
-        print(f"  🔄 Performance is comparable")
+        print("  🔄 Performance is comparable")
 
     print("\n" + "=" * 70)
 
@@ -299,7 +298,8 @@ def main():
 
     # Create LLM client
     llm = LiteLLMClient(
-        model="gpt-3.5-turbo", temperature=0.1  # Low temperature for consistency
+        model="gpt-3.5-turbo",
+        temperature=0.1,  # Low temperature for consistency
     )
 
     # Test samples covering different types

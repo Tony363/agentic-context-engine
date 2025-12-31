@@ -19,6 +19,7 @@ import os
 import sys
 import time
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -92,14 +93,14 @@ def get_ace_token_usage(
         client = opik.Opik()
         client.flush()
 
-        print(f"   📋 Querying Opik for ACE token usage...")
+        print("   📋 Querying Opik for ACE token usage...")
 
         # Use run start time if available, otherwise fall back to last 10 minutes
         if run_start_time:
             recent_time = run_start_time.isoformat().replace("+00:00", "Z")
             print(f"   🕐 Searching for traces since run start: {recent_time}")
         else:
-            now = datetime.datetime.now(datetime.timezone.utc)
+            now = datetime.datetime.now(datetime.UTC)
             recent_time = (
                 (now - datetime.timedelta(minutes=10))
                 .isoformat()
@@ -165,18 +166,18 @@ def get_ace_token_usage(
                 # Classify by role
                 if "agent" in trace_name_lower:
                     agent_tokens += total_tokens
-                    print(f"         🎯 Added to Agent")
+                    print("         🎯 Added to Agent")
                 elif "reflector" in trace_name_lower:
                     reflector_tokens += total_tokens
-                    print(f"         🔍 Added to Reflector")
+                    print("         🔍 Added to Reflector")
                 elif "skill_manager" in trace_name_lower:
                     skill_manager_tokens += total_tokens
-                    print(f"         📝 Added to SkillManager")
+                    print("         📝 Added to SkillManager")
 
         # Calculate total ACE tokens
         ace_tokens = agent_tokens + reflector_tokens + skill_manager_tokens
 
-        print(f"   📊 ACE Role breakdown:")
+        print("   📊 ACE Role breakdown:")
         print(f"      🎯 Agent: {agent_tokens} tokens")
         print(f"      🔍 Reflector: {reflector_tokens} tokens")
         print(f"      📝 SkillManager: {skill_manager_tokens} tokens")
@@ -315,9 +316,7 @@ async def check_single_domain(agent: ACEAgent, domain: str) -> dict:
                         if hasattr(agent, "_last_agent") and hasattr(
                             agent._last_agent, "token_cost_service"
                         ):
-                            usage_summary = (
-                                await agent._last_agent.token_cost_service.get_usage_summary()
-                            )
+                            usage_summary = await agent._last_agent.token_cost_service.get_usage_summary()
                             if usage_summary:
                                 if (
                                     isinstance(usage_summary, dict)
@@ -352,7 +351,7 @@ async def check_single_domain(agent: ACEAgent, domain: str) -> dict:
             # Store error for potential retry
             last_error = f"Failed to get valid result: {output}"
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # Calculate timeout steps (same as baseline logic)
             timeout_duration = 180.0
             timeout_steps = calculate_timeout_steps(timeout_duration)
@@ -439,9 +438,7 @@ async def check_single_domain(agent: ACEAgent, domain: str) -> dict:
                     if hasattr(agent, "_last_agent") and hasattr(
                         agent._last_agent, "token_cost_service"
                     ):
-                        usage_summary = (
-                            await agent._last_agent.token_cost_service.get_usage_summary()
-                        )
+                        usage_summary = await agent._last_agent.token_cost_service.get_usage_summary()
                         if usage_summary:
                             if (
                                 isinstance(usage_summary, dict)
@@ -479,7 +476,7 @@ async def main():
     """Run domain checking with ACE learning."""
 
     # Capture start time for trace filtering
-    run_start_time = datetime.datetime.now(datetime.timezone.utc)
+    run_start_time = datetime.datetime.now(datetime.UTC)
 
     # Configure observability
     try:
@@ -517,13 +514,13 @@ async def main():
     for i, domain in enumerate(domains, 1):
         print(f"  {i}. {domain}")
 
-    print(f"\n🎯 Each domain check will teach ACE new strategies")
+    print("\n🎯 Each domain check will teach ACE new strategies")
     print("💡 ACE learns automatically after each execution\n")
 
     # Run domain checks with learning
     results = []
     for i, domain in enumerate(domains, 1):
-        print(f"\n{'='*20} DOMAIN CHECK {i}/{len(domains)} {'='*20}")
+        print(f"\n{'=' * 20} DOMAIN CHECK {i}/{len(domains)} {'=' * 20}")
 
         result = await check_single_domain(agent, domain)
         results.append(result)
@@ -540,7 +537,7 @@ async def main():
         if attempt > 1:
             step_info += f" total ({', '.join(attempt_details)})"
         else:
-            step_info += f" (1 attempt)"
+            step_info += " (1 attempt)"
 
         print(f"{status_icon} {domain}: {result['status']} ({step_info})")
 
@@ -549,14 +546,14 @@ async def main():
 
         # Small delay between checks to avoid rate limits
         if i < len(domains):
-            print(f"⏳ Waiting 2 seconds before next check...")
+            print("⏳ Waiting 2 seconds before next check...")
             await asyncio.sleep(2)
 
     # Save learned strategies
     agent.save_skillbook(str(skillbook_path))
 
     # Query ACE tokens after all roles have completed
-    print(f"\n💰 Querying ACE token usage after all domains processed...")
+    print("\n💰 Querying ACE token usage after all domains processed...")
     time.sleep(5)  # Wait for Opik to index final traces
     (
         total_ace_tokens,
@@ -566,7 +563,7 @@ async def main():
     ) = get_ace_token_usage(run_start_time)
 
     # Show final results
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("📊 DOMAIN CHECK RESULTS")
     print("=" * 60)
     print(
@@ -628,10 +625,10 @@ async def main():
     print("📈 SUMMARY")
     print("=" * 80)
     print(
-        f"✅ Success rate:          {successful:>2}/{len(results)} ({100*successful/len(results):>5.1f}%)"
+        f"✅ Success rate:          {successful:>2}/{len(results)} ({100 * successful / len(results):>5.1f}%)"
     )
     print(
-        f"🎯 Accuracy rate:         {correct:>2}/{len(results)} ({100*correct/len(results):>5.1f}%)"
+        f"🎯 Accuracy rate:         {correct:>2}/{len(results)} ({100 * correct / len(results):>5.1f}%)"
     )
     print(f"🔄 Domains w/ retries:    {domains_with_retries:>2}/{len(results)}")
     print(f"🔢 Total attempts:        {total_attempts:>6}")

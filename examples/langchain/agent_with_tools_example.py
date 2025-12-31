@@ -25,6 +25,7 @@ Environment:
 """
 
 import os
+
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -32,7 +33,7 @@ load_dotenv()
 
 # Check availability
 try:
-    from ace.integrations import ACELangChain, LANGCHAIN_AVAILABLE
+    from ace.integrations import LANGCHAIN_AVAILABLE, ACELangChain
 
     if not LANGCHAIN_AVAILABLE:
         print("LangChain is not installed.")
@@ -44,9 +45,9 @@ except ImportError:
     exit(1)
 
 from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
-from langchain_anthropic import ChatAnthropic
 
 
 # Define custom tools
@@ -131,7 +132,7 @@ def example_agent_executor_meso():
     ]
 
     for i, question in enumerate(questions, 1):
-        print(f"\n{'='*40}")
+        print(f"\n{'=' * 40}")
         print(f"Question {i}: {question}")
         print("=" * 40)
         result = ace_agent.invoke({"input": question})

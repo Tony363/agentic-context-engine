@@ -9,18 +9,14 @@ Tests the new features introduced in v2.1:
 - Quality thresholds
 """
 
-import unittest
 import json
+import unittest
 
 import pytest
-
 from ace.prompts_v2_1 import (
     PromptManager,
-    validate_prompt_output_v2_1,
     compare_prompt_versions,
-    AGENT_V2_1_PROMPT,
-    REFLECTOR_V2_1_PROMPT,
-    SKILL_MANAGER_V2_1_PROMPT,
+    validate_prompt_output_v2_1,
 )
 
 

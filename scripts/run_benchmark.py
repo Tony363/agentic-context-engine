@@ -13,10 +13,10 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from statistics import mean
-from typing import Dict, List, Any
+from typing import Any
 
 # Add project root to path
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,20 +30,19 @@ try:
 except ImportError:
     pass
 
-from ace import (
-    Agent,
-    Reflector,
-    SkillManager,
-    OfflineACE,
-    OnlineACE,
-    Skillbook,
-)
-from ace.llm_providers import LiteLLMClient
-from ace import Sample
-from benchmarks import BenchmarkTaskManager
-
 # Suppress LiteLLM debug messages
 import litellm
+from ace import (
+    Agent,
+    OfflineACE,
+    OnlineACE,
+    Reflector,
+    Sample,
+    Skillbook,
+    SkillManager,
+)
+from ace.llm_providers import LiteLLMClient
+from benchmarks import BenchmarkTaskManager
 
 litellm.suppress_debug_info = True
 
@@ -173,7 +172,7 @@ def create_llm_client(args: argparse.Namespace) -> LiteLLMClient:
 
 def load_benchmark_data(
     args: argparse.Namespace, manager: BenchmarkTaskManager
-) -> List[Sample]:
+) -> list[Sample]:
     """Load and convert benchmark data to Sample format."""
     if not args.quiet:
         print(f"Loading {args.benchmark} data (split: {args.split})...")
@@ -233,7 +232,7 @@ def load_benchmark_data(
         elif args.benchmark == "hellaswag":
             # HellaSwag handling - format multiple choice and convert label
             choices = data["endings"]
-            question = f"""Context: {data['ctx']}
+            question = f"""Context: {data["ctx"]}
 
 Which ending makes the most sense?
 
@@ -252,7 +251,7 @@ Answer with just the letter (A, B, C, or D)."""
         elif args.benchmark in ["arc_easy", "arc_challenge"]:
             # ARC handling - format multiple choice
             choices = data["choices"]["text"]
-            question = f"""Question: {data['question']}
+            question = f"""Question: {data["question"]}
 
 A) {choices[0]}
 B) {choices[1]}
@@ -265,7 +264,7 @@ Answer with just the letter (A, B, C, or D)."""
         elif args.benchmark == "mmlu":
             # MMLU handling - format multiple choice
             choices = data["choices"]
-            question = f"""Question: {data['question']}
+            question = f"""Question: {data["question"]}
 
 A) {choices[0]}
 B) {choices[1]}
@@ -302,7 +301,7 @@ Answer with just the letter (A, B, C, or D)."""
 
 
 def run_comparison_mode(
-    args: argparse.Namespace, samples: List[Sample], manager: BenchmarkTaskManager
+    args: argparse.Namespace, samples: list[Sample], manager: BenchmarkTaskManager
 ) -> None:
     """Run both baseline and ACE evaluations, then compare results."""
     print(f"🚀 Running COMPARISON MODE for {args.benchmark}")
@@ -334,13 +333,13 @@ def run_comparison_mode(
     # For ACE, use test performance (true generalization)
     ace_summary = ace_results.get("test_summary", ace_results.get("summary", {}))
 
-    print(f"\n🔬 BASELINE Performance:")
+    print("\n🔬 BASELINE Performance:")
     for metric, value in baseline_summary.items():
         if metric.endswith("_mean"):
             base_metric = metric[:-5]
             print(f"  {base_metric.replace('_', ' ').title()}: {value:.2%}")
 
-    print(f"\n🧠 ACE Performance (Test - True Generalization):")
+    print("\n🧠 ACE Performance (Test - True Generalization):")
     for metric, value in ace_summary.items():
         if metric.endswith("_mean"):
             base_metric = metric[:-5]
@@ -359,7 +358,7 @@ def run_comparison_mode(
 
     # Show overfitting analysis if available
     if "overfitting_gap" in ace_results and ace_results["overfitting_gap"]:
-        print(f"\n📈 ACE Overfitting Analysis:")
+        print("\n📈 ACE Overfitting Analysis:")
         overfitting_gap = ace_results["overfitting_gap"]
         for metric, gap in overfitting_gap.items():
             if metric.endswith("_mean"):
@@ -383,7 +382,7 @@ def run_comparison_mode(
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     comparison_file = (
         output_dir / f"comparison_{args.benchmark}_{args.model}_{timestamp}.json"
     )
@@ -417,7 +416,7 @@ def run_comparison_mode(
         json.dump(comparison_data, f, indent=2, ensure_ascii=False)
 
     print(f"💾 Comparison results saved to: {comparison_file}")
-    print(f"✅ Comparison completed successfully!")
+    print("✅ Comparison completed successfully!")
 
 
 def create_ace_components(client: LiteLLMClient, prompt_version: str):
@@ -448,7 +447,7 @@ def create_ace_components(client: LiteLLMClient, prompt_version: str):
     return agent, reflector, skill_manager
 
 
-def split_samples(samples: List[Sample], split_ratio: float):
+def split_samples(samples: list[Sample], split_ratio: float):
     """Split samples into train and test sets."""
     if split_ratio >= 1.0:
         return samples, []  # All training, no test
@@ -461,8 +460,8 @@ def split_samples(samples: List[Sample], split_ratio: float):
 
 
 def run_evaluation(
-    args: argparse.Namespace, samples: List[Sample], manager: BenchmarkTaskManager
-) -> Dict[str, Any]:
+    args: argparse.Namespace, samples: list[Sample], manager: BenchmarkTaskManager
+) -> dict[str, Any]:
     """Run benchmark evaluation with ACE using proper train/test split."""
     if not args.quiet:
         print(
@@ -678,7 +677,7 @@ def run_evaluation(
     return result_dict
 
 
-def compute_summary_metrics(results: List[Dict[str, Any]]) -> Dict[str, float]:
+def compute_summary_metrics(results: list[dict[str, Any]]) -> dict[str, float]:
     """Compute summary metrics across all results."""
     if not results:
         return {}
@@ -701,12 +700,12 @@ def compute_summary_metrics(results: List[Dict[str, Any]]) -> Dict[str, float]:
     return summary
 
 
-def save_results(args: argparse.Namespace, evaluation_results: Dict[str, Any]) -> None:
+def save_results(args: argparse.Namespace, evaluation_results: dict[str, Any]) -> None:
     """Save evaluation results to files."""
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     base_name = f"{args.benchmark}_{args.model}_{timestamp}"
 
     # Save summary results
@@ -833,7 +832,7 @@ def main() -> None:
     # Validate benchmark configuration
     validation_errors = manager.validate_config(args.benchmark)
     if validation_errors:
-        print(f"Benchmark validation errors:")
+        print("Benchmark validation errors:")
         for error in validation_errors:
             print(f"  - {error}")
         sys.exit(1)
@@ -853,7 +852,7 @@ def main() -> None:
         save_results(args, evaluation_results)
 
     if not args.quiet:
-        print(f"\nEvaluation completed successfully!")
+        print("\nEvaluation completed successfully!")
 
 
 if __name__ == "__main__":

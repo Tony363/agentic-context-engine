@@ -10,14 +10,13 @@ from __future__ import annotations
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
-from dataclasses import asdict
+from typing import Any
 
-OpikLogger: Optional[type]
+OpikLogger: type | None
 
 try:
     import opik
-    from opik import track, opik_context
+    from opik import opik_context, track
 
     OPIK_AVAILABLE = True
 
@@ -77,7 +76,7 @@ class OpikIntegration:
         self,
         project_name: str = "ace-framework",
         enable_auto_config: bool = True,
-        tags: Optional[List[str]] = None,
+        tags: list[str] | None = None,
     ):
         """
         Initialize Opik integration.
@@ -116,7 +115,7 @@ class OpikIntegration:
         harmful_count: int,
         neutral_count: int,
         section: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Log skill evolution metrics to Opik."""
         if not self.enabled:
@@ -158,7 +157,7 @@ class OpikIntegration:
         skills_updated: int = 0,
         skills_removed: int = 0,
         total_skills: int = 0,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Log skillbook update metrics to Opik."""
         if not self.enabled:
@@ -191,9 +190,9 @@ class OpikIntegration:
         role_name: str,
         execution_time: float,
         success: bool,
-        input_data: Optional[Dict[str, Any]] = None,
-        output_data: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        input_data: dict[str, Any] | None = None,
+        output_data: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Log ACE role performance metrics."""
         if not self.enabled:
@@ -234,7 +233,7 @@ class OpikIntegration:
         skill_count: int,
         successful_predictions: int,
         total_predictions: int,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Log adaptation training metrics."""
         if not self.enabled:
@@ -279,7 +278,7 @@ class OpikIntegration:
         self,
         name: str,
         description: str = "",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Create an Opik experiment for evaluation."""
         if not self.enabled:
@@ -351,7 +350,7 @@ class OpikIntegration:
 
 
 # Global integration instance
-_global_integration: Optional[OpikIntegration] = None
+_global_integration: OpikIntegration | None = None
 
 
 def get_integration() -> OpikIntegration:
@@ -368,7 +367,7 @@ def get_integration() -> OpikIntegration:
 
 
 def configure_opik(
-    project_name: str = "ace-framework", tags: Optional[List[str]] = None
+    project_name: str = "ace-framework", tags: list[str] | None = None
 ) -> OpikIntegration:
     """Configure global Opik integration."""
     global _global_integration

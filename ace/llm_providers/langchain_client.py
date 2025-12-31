@@ -1,9 +1,10 @@
 """LangChain integration for ACE using langchain-litellm."""
 
-from typing import Optional, Dict, Any, AsyncIterator, Iterator
 import logging
+from collections.abc import AsyncIterator, Iterator
+from typing import Any
 
-Router: Optional[type]
+Router: type | None
 
 try:
     from langchain_litellm import ChatLiteLLM, ChatLiteLLMRouter
@@ -60,9 +61,9 @@ class LangChainLiteLLMClient(LLMClient):
     def __init__(
         self,
         model: str,
-        router: Optional[Any] = None,  # Router from litellm
+        router: Any | None = None,  # Router from litellm
         temperature: float = 0.0,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         **kwargs,
     ):
         if not LANGCHAIN_AVAILABLE:
@@ -96,7 +97,7 @@ class LangChainLiteLLMClient(LLMClient):
             )
             self.is_router = False
 
-    def _filter_kwargs(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def _filter_kwargs(self, kwargs: dict[str, Any]) -> dict[str, Any]:
         """Filter out ACE-specific parameters that shouldn't go to LangChain."""
         ace_specific_params = {"refinement_round", "max_refinement_rounds"}
         return {k: v for k, v in kwargs.items() if k not in ace_specific_params}

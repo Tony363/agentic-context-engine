@@ -3,8 +3,8 @@
 import os
 import time
 
-from ace import Skillbook, Sample, OfflineACE, Agent, Reflector, SkillManager
-from ace.adaptation import TaskEnvironment, EnvironmentResult
+from ace import Agent, OfflineACE, Reflector, Sample, Skillbook, SkillManager
+from ace.adaptation import EnvironmentResult, TaskEnvironment
 from ace.llm_providers import LiteLLMClient
 
 
@@ -123,7 +123,7 @@ def demonstrate_skillbook_inspection(skillbook):
 
     # Print skillbook statistics
     stats = skillbook.stats()
-    print(f"\nSkillbook Statistics:")
+    print("\nSkillbook Statistics:")
     print(f"  - Sections: {stats['sections']}")
     print(f"  - Total skills: {stats['skills']}")
     print(f"  - Helpful tags: {stats['tags']['helpful']}")
@@ -133,12 +133,12 @@ def demonstrate_skillbook_inspection(skillbook):
     # Show skillbook as prompt (first 500 chars)
     prompt_view = skillbook.as_prompt()
     if prompt_view:
-        print(f"\nSkillbook as prompt (preview):")
+        print("\nSkillbook as prompt (preview):")
         print("-" * 40)
         print(prompt_view[:500] + "..." if len(prompt_view) > 500 else prompt_view)
 
     # Show individual skills
-    print(f"\nIndividual skills:")
+    print("\nIndividual skills:")
     for skill in skillbook.skills()[:3]:  # Show first 3 skills
         print(f"  [{skill.id}] {skill.content[:60]}...")
         print(f"    Helpful: {skill.helpful}, Harmful: {skill.harmful}")
@@ -165,13 +165,13 @@ if __name__ == "__main__":
         print("\n" + "=" * 60)
         print("SUMMARY")
         print("=" * 60)
-        print(f"\n📊 TIMING:")
+        print("\n📊 TIMING:")
         print(f"   - Training time: {train_time:.2f}s")
         print(f"   - Inference time: {inference_time:.2f}s")
-        print(f"\n📚 SKILLBOOK:")
+        print("\n📚 SKILLBOOK:")
         print(f"   - Strategies learned: {len(loaded_skillbook.skills())}")
         print(f"   - Sections: {list(loaded_skillbook._sections.keys())}")
-        print(f"\n✅ Skillbook can now be reused without retraining!")
+        print("\n✅ Skillbook can now be reused without retraining!")
 
         # Clean up
         if os.path.exists(skillbook_path):
@@ -212,14 +212,14 @@ if __name__ == "__main__":
         print(f"✓ Loaded skillbook with {len(loaded.skills())} skills")
 
         # Verify content matches
-        for original, loaded_skill in zip(skillbook.skills(), loaded.skills()):
+        for original, loaded_skill in zip(skillbook.skills(), loaded.skills(), strict=False):
             assert original.content == loaded_skill.content
             assert original.helpful == loaded_skill.helpful
         print("✓ Content verified - save/load working correctly!")
 
         # Show the JSON structure
-        print(f"\nJSON structure of saved skillbook:")
-        with open(test_path, "r") as f:
+        print("\nJSON structure of saved skillbook:")
+        with open(test_path) as f:
             print(f.read())
 
         # Clean up

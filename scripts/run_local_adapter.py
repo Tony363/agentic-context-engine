@@ -9,20 +9,19 @@ import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from ace import (
-    SkillManager,
-    EnvironmentResult,
     Agent,
+    EnvironmentResult,
     OfflineACE,
-    Skillbook,
     Reflector,
     Sample,
+    Skillbook,
+    SkillManager,
     TaskEnvironment,
     TransformersLLMClient,
 )
@@ -107,7 +106,7 @@ def main() -> None:
         max_refinement_rounds=3,
     )
 
-    samples: List[Sample] = [
+    samples: list[Sample] = [
         SimpleSample(
             sample_id="demo-1",
             question="Answer the question by returning the digits 42. Respond strictly via the JSON schema.",

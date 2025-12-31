@@ -7,23 +7,24 @@ Uses OnlineACE for incremental learning after each form.
 """
 
 import asyncio
-from typing import Dict
-from dotenv import load_dotenv
-
-from browser_use import Agent as BrowserAgent, Browser, ChatOpenAI
 
 from ace import (
-    LiteLLMClient,
     Agent as ACEAgent,
-    Reflector,
-    SkillManager,
-    OnlineACE,
-    Sample,
-    TaskEnvironment,
+)
+from ace import (
     EnvironmentResult,
+    LiteLLMClient,
+    OnlineACE,
+    Reflector,
+    Sample,
     Skillbook,
+    SkillManager,
+    TaskEnvironment,
 )
 from ace.observability import configure_opik
+from browser_use import Agent as BrowserAgent
+from browser_use import Browser, ChatOpenAI
+from dotenv import load_dotenv
 
 # Import form-specific utilities
 from form_utils import get_test_forms
@@ -74,7 +75,7 @@ class FormFillEnvironment(TaskEnvironment):
             },
         )
 
-    async def _fill_form(self, form_data: Dict, strategy: str):
+    async def _fill_form(self, form_data: dict, strategy: str):
         """Execute browser automation to fill form."""
         browser = None
         try:
@@ -128,7 +129,7 @@ ERROR: <reason>"""
 
             return {"status": status, "steps": steps, "output": output}
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # Get actual steps even on timeout - history should exist
             try:
                 steps = (
@@ -191,7 +192,8 @@ def main():
 
     # Create environment
     environment = FormFillEnvironment(
-        headless=False, model="gpt-4o-mini"  # Change to True for headless mode
+        headless=False,
+        model="gpt-4o-mini",  # Change to True for headless mode
     )
 
     print("\n🔄 Starting incremental ACE learning...\n")
@@ -214,7 +216,7 @@ def main():
     print("\n" + "=" * 40)
     print("📊 Results:")
 
-    for i, (form, result) in enumerate(zip(forms, results), 1):
+    for i, (form, result) in enumerate(zip(forms, results, strict=False), 1):
         metrics = result.environment_result.metrics
         status = metrics.get("status", "UNKNOWN")
         steps = metrics.get("steps", 0)
@@ -232,14 +234,14 @@ def main():
     avg_steps = total_steps / len(results) if results else 0
 
     print(
-        f"\n✅ Success rate: {successful}/{len(results)} ({100*successful/len(results):.1f}%)"
+        f"\n✅ Success rate: {successful}/{len(results)} ({100 * successful / len(results):.1f}%)"
     )
     print(f"⚡ Average steps: {avg_steps:.1f}")
     print(f"🧠 Strategies learned: {len(adapter.skillbook.skills())}")
 
     # Show learned strategies
     if adapter.skillbook.skills():
-        print(f"\n🎯 Learned Strategies:")
+        print("\n🎯 Learned Strategies:")
         for i, skill in enumerate(adapter.skillbook.skills(), 1):
             print(f"  {i}. {skill.content}")
 

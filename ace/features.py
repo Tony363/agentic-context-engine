@@ -10,14 +10,12 @@ Usage:
     ...     integration = OpikIntegration()
 """
 
-from typing import Dict, Optional
-
 
 # Cache for dependency checks to avoid repeated imports
-_FEATURE_CACHE: Dict[str, bool] = {}
+_FEATURE_CACHE: dict[str, bool] = {}
 
 
-def _check_import(module_name: str, package: Optional[str] = None) -> bool:
+def _check_import(module_name: str, package: str | None = None) -> bool:
     """
     Check if a module can be imported.
 
@@ -90,7 +88,7 @@ def has_sentence_transformers() -> bool:
     return _check_import("sentence_transformers")
 
 
-def get_available_features() -> Dict[str, bool]:
+def get_available_features() -> dict[str, bool]:
     """
     Get a dictionary of all available features.
 

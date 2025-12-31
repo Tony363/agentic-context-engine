@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from .config import DeduplicationConfig
 from .detector import SimilarityDetector
@@ -41,11 +40,11 @@ class DeduplicationManager:
         manager.apply_operations_from_response(skill_manager_response, skillbook)
     """
 
-    def __init__(self, config: Optional[DeduplicationConfig] = None):
+    def __init__(self, config: DeduplicationConfig | None = None):
         self.config = config or DeduplicationConfig()
         self.detector = SimilarityDetector(config)
 
-    def get_similarity_report(self, skillbook: "Skillbook") -> Optional[str]:
+    def get_similarity_report(self, skillbook: Skillbook) -> str | None:
         """Generate similarity report to include in SkillManager prompt.
 
         This should be called BEFORE the SkillManager runs.
@@ -83,8 +82,8 @@ class DeduplicationManager:
         return generate_similarity_report(similar_pairs)
 
     def parse_consolidation_operations(
-        self, response_data: Dict[str, Any]
-    ) -> List[ConsolidationOperation]:
+        self, response_data: dict[str, Any]
+    ) -> list[ConsolidationOperation]:
         """Parse consolidation operations from SkillManager response.
 
         Args:
@@ -93,7 +92,7 @@ class DeduplicationManager:
         Returns:
             List of ConsolidationOperation objects
         """
-        operations: List[ConsolidationOperation] = []
+        operations: list[ConsolidationOperation] = []
         raw_ops = response_data.get("consolidation_operations", [])
 
         if not isinstance(raw_ops, list):
@@ -149,8 +148,8 @@ class DeduplicationManager:
 
     def apply_operations(
         self,
-        operations: List[ConsolidationOperation],
-        skillbook: "Skillbook",
+        operations: list[ConsolidationOperation],
+        skillbook: Skillbook,
     ) -> None:
         """Apply consolidation operations to the skillbook.
 
@@ -166,9 +165,9 @@ class DeduplicationManager:
 
     def apply_operations_from_response(
         self,
-        response_data: Dict[str, Any],
-        skillbook: "Skillbook",
-    ) -> List[ConsolidationOperation]:
+        response_data: dict[str, Any],
+        skillbook: Skillbook,
+    ) -> list[ConsolidationOperation]:
         """Parse and apply consolidation operations from SkillManager response.
 
         Convenience method that combines parse and apply.

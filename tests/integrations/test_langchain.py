@@ -1,15 +1,16 @@
 """Tests for LangChain integration (ACELangChain)."""
 
-import pytest
-from pathlib import Path
 import tempfile
-from unittest.mock import Mock, MagicMock, AsyncMock, patch
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 # Skip all tests if langchain not available
 pytest.importorskip("langchain_core")
 
-from ace.integrations import ACELangChain, LANGCHAIN_AVAILABLE
-from ace import Skillbook, Skill, LiteLLMClient
+from ace import Skillbook
+from ace.integrations import LANGCHAIN_AVAILABLE, ACELangChain
 
 
 class TestLangChainAvailability:

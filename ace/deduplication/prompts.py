@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..skillbook import Skill
@@ -31,7 +31,7 @@ PAIR_TEMPLATE = """### Pair {index}: {similarity:.0%} similar
 
 
 def generate_similarity_report(
-    similar_pairs: List[Tuple["Skill", "Skill", float]],
+    similar_pairs: list[tuple[Skill, Skill, float]],
 ) -> str:
     """Generate a human-readable similarity report for the SkillManager.
 
@@ -114,7 +114,7 @@ Each operation should have a `type` field and relevant fields for that type:
 
 
 def format_pair_for_logging(
-    skill_a: "Skill", skill_b: "Skill", similarity: float
+    skill_a: Skill, skill_b: Skill, similarity: float
 ) -> str:
     """Format a single pair for logging output."""
     return (

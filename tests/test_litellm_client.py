@@ -1,8 +1,7 @@
 """Basic tests for LiteLLM client integration."""
 
 import unittest
-from unittest.mock import patch, MagicMock
-import logging
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -66,7 +65,6 @@ class TestClaudeParameterResolution(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        from ace.llm_providers import LiteLLMClient
 
         self.mock_response = MagicMock()
         self.mock_response.choices = [
