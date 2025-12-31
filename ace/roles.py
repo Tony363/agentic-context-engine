@@ -243,6 +243,7 @@ class Agent:
             question=question,
             context=_format_optional(context),
         )
+        logger.debug("[ACE:AGENT] prompt_len=%d skills_available=%d", len(base_prompt), len(skillbook.skills()))
 
         # Filter out non-LLM kwargs (like 'sample' used for ReplayAgent)
         llm_kwargs = {k: v for k, v in kwargs.items() if k != "sample"}
@@ -250,6 +251,11 @@ class Agent:
         # Use Instructor for automatic validation (always available - core dependency)
         output = self.llm.complete_structured(base_prompt, AgentOutput, **llm_kwargs)
         output.skill_ids = extract_cited_skill_ids(output.reasoning)
+        logger.info(
+            "[ACE:AGENT] GENERATE answer_len=%d skills_used=%d",
+            len(output.final_answer),
+            len(output.skill_ids),
+        )
         return output
 
 
@@ -587,12 +593,20 @@ class Reflector:
             feedback=_format_optional(feedback),
             skillbook_excerpt=skillbook_context,
         )
+        logger.debug("[ACE:REFLECT] prompt_len=%d skills_cited=%d", len(base_prompt), len(agent_output.skill_ids))
 
         # Filter out non-LLM kwargs (like 'sample' used for ReplayAgent)
         llm_kwargs = {k: v for k, v in kwargs.items() if k != "sample"}
 
         # Use Instructor for automatic validation (always available - core dependency)
-        return self.llm.complete_structured(base_prompt, ReflectorOutput, **llm_kwargs)
+        output = self.llm.complete_structured(base_prompt, ReflectorOutput, **llm_kwargs)
+        logger.info(
+            "[ACE:REFLECT] DONE tags=%d learnings=%d insight=%s",
+            len(output.skill_tags),
+            len(output.extracted_learnings),
+            output.key_insight[:60] if output.key_insight else "(none)",
+        )
+        return output
 
 
 class SkillManagerOutput(BaseModel):
@@ -751,7 +765,7 @@ class SkillManager:
         if self.dedup_manager is not None:
             similarity_report = self.dedup_manager.get_similarity_report(skillbook)
             if similarity_report:
-                logger.info("Including similarity report in SkillManager prompt")
+                logger.info("[ACE:SKILLMGR] including similarity report in prompt")
 
         # Serialize reflection with all meaningful fields (not just empty 'raw')
         reflection_data = {
@@ -772,6 +786,12 @@ class SkillManager:
             skillbook=skillbook.as_prompt() or "(empty skillbook)",
             question_context=question_context,
         )
+        logger.debug(
+            "[ACE:SKILLMGR] prompt_len=%d skills_current=%d learnings=%d",
+            len(base_prompt),
+            len(skillbook.skills()),
+            len(reflection.extracted_learnings),
+        )
 
         # Append similarity report if available
         if similarity_report:
@@ -784,6 +804,11 @@ class SkillManager:
         output = self.llm.complete_structured(
             base_prompt, SkillManagerOutput, **llm_kwargs
         )
+        logger.info(
+            "[ACE:SKILLMGR] UPDATE ops=%d consolidate=%s",
+            len(output.update.operations),
+            bool(output.consolidation_operations),
+        )
 
         # Apply consolidation operations if deduplication is enabled
         if self.dedup_manager is not None and output.consolidation_operations:
@@ -794,7 +819,7 @@ class SkillManager:
                 response_data, skillbook
             )
             if applied_ops:
-                logger.info(f"Applied {len(applied_ops)} consolidation operations")
+                logger.info("[ACE:SKILLMGR] applied %d consolidation operations", len(applied_ops))
 
         return output
 

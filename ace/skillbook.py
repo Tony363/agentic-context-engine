@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
@@ -10,6 +11,8 @@ from pathlib import Path
 from typing import Any, Literal, cast
 
 from .updates import UpdateBatch, UpdateOperation
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -115,6 +118,12 @@ class Skillbook:
         skill.apply_metadata(metadata)
         self._skills[skill_id] = skill
         self._sections.setdefault(section, []).append(skill_id)
+        logger.info(
+            "[ACE:SKILL] ADD skill_id=%s section=%s content_len=%d",
+            skill_id,
+            section,
+            len(content),
+        )
         return skill
 
     def update_skill(
@@ -126,19 +135,34 @@ class Skillbook:
     ) -> Skill | None:
         skill = self._skills.get(skill_id)
         if skill is None:
+            logger.debug("[ACE:SKILL] UPDATE skill_id=%s not_found", skill_id)
             return None
         if content is not None:
             skill.content = content
         if metadata:
             skill.apply_metadata(metadata)
         skill.updated_at = datetime.now(UTC).isoformat()
+        logger.info(
+            "[ACE:SKILL] UPDATE skill_id=%s content_changed=%s metadata=%s",
+            skill_id,
+            content is not None,
+            metadata,
+        )
         return skill
 
     def tag_skill(self, skill_id: str, tag: str, increment: int = 1) -> Skill | None:
         skill = self._skills.get(skill_id)
         if skill is None:
+            logger.debug("[ACE:SKILL] TAG skill_id=%s not_found", skill_id)
             return None
         skill.tag(tag, increment=increment)
+        logger.debug(
+            "[ACE:SKILL] TAG skill_id=%s tag=%s increment=%d new_count=%d",
+            skill_id,
+            tag,
+            increment,
+            getattr(skill, tag, 0),
+        )
 
         # Opik tracing handles this automatically via @track decorator
 
@@ -153,12 +177,14 @@ class Skillbook:
         """
         skill = self._skills.get(skill_id)
         if skill is None:
+            logger.debug("[ACE:SKILL] REMOVE skill_id=%s not_found", skill_id)
             return
 
         if soft:
             # Soft delete: mark as invalid but keep in storage
             skill.status = "invalid"
             skill.updated_at = datetime.now(UTC).isoformat()
+            logger.info("[ACE:SKILL] REMOVE skill_id=%s soft=True (marked invalid)", skill_id)
         else:
             # Hard delete: remove entirely
             self._skills.pop(skill_id, None)
@@ -169,6 +195,7 @@ class Skillbook:
                 ]
                 if not self._sections[skill.section]:
                     del self._sections[skill.section]
+            logger.info("[ACE:SKILL] REMOVE skill_id=%s soft=False (deleted)", skill_id)
 
     def get_skill(self, skill_id: str) -> Skill | None:
         return self._skills.get(skill_id)
@@ -324,6 +351,12 @@ class Skillbook:
             self._apply_operation(operation)
 
         skills_after = len(self._skills)
+        logger.info(
+            "[ACE:SKILL] BATCH applied %d operations, skills: %d→%d",
+            len(update.operations),
+            skills_before,
+            skills_after,
+        )
 
         # Opik tracing handles this automatically via @track decorator
 

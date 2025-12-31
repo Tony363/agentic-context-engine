@@ -418,6 +418,13 @@ class ACEBase:
         step_index: int,
         total_steps: int,
     ) -> ACEStepResult:
+        logger.info(
+            "[ACE:ADAPT] SAMPLE_START epoch=%d/%d step=%d/%d",
+            epoch,
+            total_epochs,
+            step_index,
+            total_steps,
+        )
         agent_output = self.agent.generate(
             question=sample.question,
             context=sample.context,
@@ -425,7 +432,17 @@ class ACEBase:
             reflection=self._reflection_context(),
             sample=sample,  # Pass sample for ReplayAgent support
         )
+        logger.debug(
+            "[ACE:ADAPT] AGENT_DONE skills_cited=%s answer_len=%d",
+            agent_output.skill_ids,
+            len(agent_output.final_answer),
+        )
         env_result = environment.evaluate(sample, agent_output)
+        logger.debug(
+            "[ACE:ADAPT] ENV_EVAL feedback=%s metrics=%s",
+            env_result.feedback[:80] if env_result.feedback else "(none)",
+            env_result.metrics,
+        )
         reflection = self.reflector.reflect(
             question=sample.question,
             agent_output=agent_output,
@@ -433,6 +450,12 @@ class ACEBase:
             ground_truth=env_result.ground_truth,
             feedback=env_result.feedback,
             max_refinement_rounds=self.max_refinement_rounds,
+        )
+        logger.debug(
+            "[ACE:ADAPT] REFLECT_DONE tags=%d learnings=%d insight=%s",
+            len(reflection.skill_tags),
+            len(reflection.extracted_learnings),
+            reflection.key_insight[:60] if reflection.key_insight else "(none)",
         )
         self._apply_skill_tags(reflection)
         self._update_recent_reflections(reflection)
@@ -443,6 +466,10 @@ class ACEBase:
             progress=self._progress_string(
                 epoch, total_epochs, step_index, total_steps
             ),
+        )
+        logger.info(
+            "[ACE:ADAPT] SKILLMGR_DONE operations=%d",
+            len(skill_manager_output.update.operations),
         )
 
         # Track observability data if enabled
@@ -458,6 +485,14 @@ class ACEBase:
             )
 
         self.skillbook.apply_update(skill_manager_output.update)
+        logger.info(
+            "[ACE:ADAPT] SAMPLE_DONE epoch=%d/%d step=%d/%d skills_total=%d",
+            epoch,
+            total_epochs,
+            step_index,
+            total_steps,
+            len(self.skillbook.skills()),
+        )
 
         return ACEStepResult(
             sample=sample,
@@ -486,6 +521,14 @@ class ACEBase:
         """
         from .async_learning import LearningTask
 
+        logger.info(
+            "[ACE:ADAPT] ASYNC_SAMPLE_START epoch=%d/%d step=%d/%d",
+            epoch,
+            total_epochs,
+            step_index,
+            total_steps,
+        )
+
         # Generate (uses current skillbook - eventual consistency)
         agent_output = self.agent.generate(
             question=sample.question,
@@ -494,9 +537,19 @@ class ACEBase:
             reflection=self._reflection_context(),
             sample=sample,
         )
+        logger.debug(
+            "[ACE:ADAPT] ASYNC_AGENT_DONE step=%d skills_cited=%s",
+            step_index,
+            agent_output.skill_ids,
+        )
 
         # Evaluate (sync - usually fast)
         env_result = environment.evaluate(sample, agent_output)
+        logger.debug(
+            "[ACE:ADAPT] ASYNC_ENV_EVAL step=%d feedback=%s",
+            step_index,
+            env_result.feedback[:60] if env_result.feedback else "(none)",
+        )
 
         # Submit to async pipeline (Reflector runs in thread pool)
         if self._async_pipeline:
@@ -510,6 +563,10 @@ class ACEBase:
                 total_steps=total_steps,
             )
             self._async_pipeline.submit(task)
+            logger.info(
+                "[ACE:ADAPT] ASYNC_SUBMITTED step=%d (learning in background)",
+                step_index,
+            )
 
         # Return immediately with partial result
         return ACEStepResult(

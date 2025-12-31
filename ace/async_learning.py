@@ -327,7 +327,7 @@ class AsyncLearningPipeline:
             Future for tracking completion, or None if pipeline not running
         """
         if self._reflector_pool is None:
-            logger.warning("Cannot submit task: pipeline not started")
+            logger.warning("[ACE:ASYNC] Cannot submit task: pipeline not started")
             return None
 
         with self._stats_lock:
@@ -342,6 +342,12 @@ class AsyncLearningPipeline:
             # Clean up completed futures
             self._pending_futures = [f for f in self._pending_futures if not f.done()]
 
+        logger.info(
+            "[ACE:ASYNC] SUBMIT step=%d queue_size=%d pending_reflectors=%d",
+            task.step_index,
+            self._skill_manager_queue.qsize(),
+            len(self._pending_futures),
+        )
         return future
 
     # -----------------------------------------------------------------------
@@ -420,6 +426,7 @@ class AsyncLearningPipeline:
 
         Can have multiple instances running concurrently.
         """
+        logger.debug("[ACE:ASYNC] REFLECT_START step=%d", task.step_index)
         try:
             # Run reflection (safe to parallelize - reads only)
             reflection = self._reflector.reflect(
@@ -439,8 +446,8 @@ class AsyncLearningPipeline:
                 self._skill_manager_queue.put(result, timeout=10.0)
             except Full:
                 logger.warning(
-                    f"SkillManager queue full, dropping reflection for sample "
-                    f"{task.step_index}"
+                    "[ACE:ASYNC] SkillManager queue full, dropping step=%d",
+                    task.step_index,
                 )
                 with self._stats_lock:
                     self._tasks_failed += 1
@@ -449,10 +456,16 @@ class AsyncLearningPipeline:
             with self._stats_lock:
                 self._reflections_completed += 1
 
+            logger.info(
+                "[ACE:ASYNC] REFLECT_DONE step=%d tags=%d learnings=%d",
+                task.step_index,
+                len(reflection.skill_tags),
+                len(reflection.extracted_learnings),
+            )
             return result
 
         except Exception as e:
-            logger.warning(f"Reflector failed for sample {task.step_index}: {e}")
+            logger.warning("[ACE:ASYNC] Reflector failed step=%d: %s", task.step_index, e)
             with self._stats_lock:
                 self._tasks_failed += 1
 
@@ -469,6 +482,7 @@ class AsyncLearningPipeline:
 
         Only one instance runs at a time to serialize skillbook updates.
         """
+        logger.debug("[ACE:ASYNC] SkillManager loop started")
         while not self._stop_event.is_set():
             try:
                 # Block with timeout to check stop_event periodically
@@ -476,11 +490,18 @@ class AsyncLearningPipeline:
             except Empty:
                 continue
 
+            logger.debug(
+                "[ACE:ASYNC] SKILLMGR_START step=%d queue_remaining=%d",
+                result.task.step_index,
+                self._skill_manager_queue.qsize(),
+            )
             try:
                 self._process_skill_update(result)
             except Exception as e:
                 logger.warning(
-                    f"SkillManager failed for sample {result.task.step_index}: {e}"
+                    "[ACE:ASYNC] SkillManager failed step=%d: %s",
+                    result.task.step_index,
+                    e,
                 )
                 with self._stats_lock:
                     self._tasks_failed += 1
@@ -492,6 +513,7 @@ class AsyncLearningPipeline:
                         pass
             finally:
                 self._skill_manager_queue.task_done()
+        logger.debug("[ACE:ASYNC] SkillManager loop stopped")
 
     def _process_skill_update(self, result: ReflectionResult) -> None:
         """Process a single reflection result through SkillManager.
@@ -502,9 +524,11 @@ class AsyncLearningPipeline:
         reflection = result.reflection
 
         # Apply skill tags (thread-safe)
+        tags_applied = 0
         for tag in reflection.skill_tags:
             try:
                 self._skillbook.tag_skill(tag.id, tag.tag)
+                tags_applied += 1
             except ValueError:
                 continue  # Skill not found, skip
 
@@ -525,6 +549,14 @@ class AsyncLearningPipeline:
 
         with self._stats_lock:
             self._skill_updates_completed += 1
+
+        logger.info(
+            "[ACE:ASYNC] SKILLMGR_DONE step=%d ops=%d tags_applied=%d skills_total=%d",
+            task.step_index,
+            len(skill_manager_output.update.operations),
+            tags_applied,
+            len(self._skillbook.skills()),
+        )
 
         # Completion callback
         if self._on_complete:
